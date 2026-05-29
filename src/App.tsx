@@ -1,21 +1,28 @@
-import { AppProvider, useApp } from './context/AppContext';
-import { Navbar } from './components/Navbar';
-import { AuthScreen } from './components/AuthScreen';
-import { AdminDashboard } from './components/AdminDashboard';
-import { SellerDashboard } from './components/SellerDashboard';
-import { BuyerDashboard } from './components/BuyerDashboard';
-import { Sparkles } from 'lucide-react';
+import { AppProvider, useApp } from "./context/AppContext";
+import { Navbar } from "./components/Navbar";
+import { AuthScreen } from "./components/AuthScreen";
+import { AdminDashboard } from "./components/AdminDashboard";
+import { SellerDashboard } from "./components/SellerDashboard";
+import { BuyerDashboard } from "./components/BuyerDashboard";
+import { SellerApplicationForm } from "./components/SellerApplicationForm";
+import { Sparkles } from "lucide-react";
 
 function DashboardSwitch() {
   const { currentUser } = useApp();
 
   if (!currentUser) return null;
 
-  if (currentUser.role === 'admin') {
+  if (currentUser.role === "admin") {
     return <AdminDashboard />;
   }
 
-  if (currentUser.category === 'seller') {
+  if (currentUser.category === "seller") {
+    if (
+      currentUser.sellerStatus !== "approved" &&
+      currentUser.id !== "u_alex"
+    ) {
+      return <SellerApplicationForm />;
+    }
     return <SellerDashboard />;
   }
 
@@ -30,15 +37,18 @@ function MainAppLayout() {
   }
 
   return (
-    <div 
-      id="melagent-root" 
+    <div
+      id="melagent-root"
       className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 transition-colors duration-200"
     >
       {/* Pristine Block Header Navigation */}
       <Navbar />
 
       {/* Main Content Arena */}
-      <main id="app-main" className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4">
+      <main
+        id="app-main"
+        className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-4"
+      >
         {/* Dashboard Switcher router */}
         <DashboardSwitch />
       </main>
@@ -49,7 +59,10 @@ function MainAppLayout() {
           <div className="flex items-center justify-center gap-2 mb-1.5">
             <Sparkles className="h-4.5 w-4.5 text-indigo-500" />
             <span className="font-display font-extrabold text-sm text-slate-900 dark:text-white">
-              Mel<span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">Agent</span>
+              Mel
+              <span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">
+                Agent
+              </span>
             </span>
           </div>
           <p className="text-xs text-slate-400 dark:text-slate-500 font-semibold tracking-wide">

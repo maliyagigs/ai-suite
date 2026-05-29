@@ -1,35 +1,50 @@
-import React, { useState, useRef } from 'react';
-import { useApp } from '../context/AppContext';
-import { Shield, Users, Layout, FileText, Trash2, ShieldAlert, BadgeInfo, Calendar, MessageSquare, Mail, Bell, Send, CheckCircle2, X } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
-import * as animeBase from 'animejs';
+import React, { useState, useRef } from "react";
+import { useApp } from "../context/AppContext";
+import {
+  Shield,
+  Users,
+  Layout,
+  FileText,
+  Trash2,
+  ShieldAlert,
+  BadgeInfo,
+  Calendar,
+  MessageSquare,
+  Mail,
+  Bell,
+  Send,
+  CheckCircle2,
+  X,
+} from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import * as animeBase from "animejs";
 const anime = (animeBase as any).default || animeBase;
 
 const AnimeUserProfileIcon = ({ name }: { name: string }) => {
   const elRef = useRef<HTMLDivElement>(null);
-  
+
   const handleEnter = () => {
     anime({
       targets: elRef.current,
       scale: 1.15,
-      rotate: '1turn',
+      rotate: "1turn",
       duration: 800,
-      easing: 'easeOutElastic(1, .5)',
+      easing: "easeOutElastic(1, .5)",
     });
   };
-  
+
   const handleLeave = () => {
     anime({
       targets: elRef.current,
       scale: 1,
-      rotate: '0turn',
+      rotate: "0turn",
       duration: 600,
-      easing: 'easeOutElastic(1, .5)',
+      easing: "easeOutElastic(1, .5)",
     });
   };
-  
+
   return (
-    <div 
+    <div
       ref={elRef}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
@@ -41,27 +56,38 @@ const AnimeUserProfileIcon = ({ name }: { name: string }) => {
 };
 
 export function AdminDashboard() {
-  const { users, gigs, inquiries, deleteGig, deleteUser, sendNotification } = useApp();
-  const [activeTab, setActiveTab] = useState<'listings' | 'users' | 'inquiries'>('listings');
+  const {
+    users,
+    gigs,
+    inquiries,
+    deleteGig,
+    deleteUser,
+    sendNotification,
+    approveSellerApplication,
+    rejectSellerApplication,
+  } = useApp();
+  const [activeTab, setActiveTab] = useState<
+    "listings" | "users" | "inquiries" | "applications"
+  >("listings");
 
   // Send Notification States
   const [selectedUserForNotif, setSelectedUserForNotif] = useState<any>(null);
-  const [notifTitle, setNotifTitle] = useState('');
-  const [notifMessage, setNotifMessage] = useState('');
+  const [notifTitle, setNotifTitle] = useState("");
+  const [notifMessage, setNotifMessage] = useState("");
   const [notifSentFeedback, setNotifSentFeedback] = useState(false);
 
   const handleSendNotification = (e: React.FormEvent) => {
     e.preventDefault();
     if (!notifTitle.trim() || !notifMessage.trim()) return;
 
-    if (selectedUserForNotif === 'ALL') {
+    if (selectedUserForNotif === "ALL") {
       sendNotification(notifTitle, notifMessage); // undefined target implies global
     } else {
       sendNotification(notifTitle, notifMessage, selectedUserForNotif.id);
     }
-    
-    setNotifTitle('');
-    setNotifMessage('');
+
+    setNotifTitle("");
+    setNotifMessage("");
     setNotifSentFeedback(true);
     setTimeout(() => {
       setNotifSentFeedback(false);
@@ -69,10 +95,8 @@ export function AdminDashboard() {
     }, 2000);
   };
 
-
   return (
     <div className="space-y-6 md:space-y-8 py-4 md:py-8 animate-fade-in text-slate-900 dark:text-slate-100 transition-colors duration-200">
-      
       {/* Title */}
       <h2 className="text-lg md:text-xl font-bold font-display tracking-tight flex items-center gap-2">
         <Shield className="h-5 w-5 md:h-5.5 md:w-5.5 text-indigo-600 dark:text-indigo-400" />
@@ -86,8 +110,12 @@ export function AdminDashboard() {
             <Users className="h-5 w-5 md:h-6 md:w-6" />
           </div>
           <div className="min-w-0">
-            <div className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-sans truncate">Global Users</div>
-            <div className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white mt-0.5">{users.length}</div>
+            <div className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-sans truncate">
+              Global Users
+            </div>
+            <div className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white mt-0.5">
+              {users.length}
+            </div>
           </div>
         </div>
 
@@ -96,8 +124,12 @@ export function AdminDashboard() {
             <Layout className="h-5 w-5 md:h-6 md:w-6" />
           </div>
           <div className="min-w-0">
-            <div className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-sans truncate">Showcase Gigs</div>
-            <div className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white mt-0.5">{gigs.length}</div>
+            <div className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-sans truncate">
+              Showcase Gigs
+            </div>
+            <div className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white mt-0.5">
+              {gigs.length}
+            </div>
           </div>
         </div>
 
@@ -106,8 +138,12 @@ export function AdminDashboard() {
             <MessageSquare className="h-5 w-5 md:h-6 md:w-6" />
           </div>
           <div className="min-w-0">
-            <div className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-sans truncate">Client Inquiries</div>
-            <div className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white mt-0.5">{inquiries.length}</div>
+            <div className="text-[9px] md:text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-wider font-sans truncate">
+              Client Inquiries
+            </div>
+            <div className="text-xl md:text-2xl font-extrabold text-slate-800 dark:text-white mt-0.5">
+              {inquiries.length}
+            </div>
           </div>
         </div>
       </div>
@@ -115,46 +151,175 @@ export function AdminDashboard() {
       {/* Navigation tabs - horizontally scrollable without wrapping on mobile */}
       <div className="flex border-b border-slate-200 dark:border-slate-800 overflow-x-auto scrollbar-none -mx-4 px-4 sm:mx-0 sm:px-0">
         <button
-          onClick={() => setActiveTab('listings')}
+          onClick={() => setActiveTab("listings")}
           className={`pb-3 px-4 md:px-6 font-display font-bold text-xs md:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'listings'
-              ? 'border-indigo-650 text-indigo-650 dark:border-indigo-400 dark:text-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            activeTab === "listings"
+              ? "border-indigo-650 text-indigo-650 dark:border-indigo-400 dark:text-indigo-400"
+              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
         >
           Manage Listings ({gigs.length})
         </button>
         <button
-          onClick={() => setActiveTab('users')}
+          onClick={() => setActiveTab("users")}
           className={`pb-3 px-4 md:px-6 font-display font-bold text-xs md:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'users'
-              ? 'border-indigo-650 text-indigo-650 dark:border-indigo-400 dark:text-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            activeTab === "users"
+              ? "border-indigo-650 text-indigo-650 dark:border-indigo-400 dark:text-indigo-400"
+              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
         >
           Manage Registries ({users.length})
         </button>
         <button
-          onClick={() => setActiveTab('inquiries')}
+          onClick={() => setActiveTab("inquiries")}
           className={`pb-3 px-4 md:px-6 font-display font-bold text-xs md:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
-            activeTab === 'inquiries'
-              ? 'border-indigo-650 text-indigo-650 dark:border-indigo-400 dark:text-indigo-400'
-              : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
+            activeTab === "inquiries"
+              ? "border-indigo-650 text-indigo-650 dark:border-indigo-400 dark:text-indigo-400"
+              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
           }`}
         >
           Inquiries Log ({inquiries.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("applications")}
+          className={`pb-3 px-4 md:px-6 font-display font-bold text-xs md:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 flex gap-2 items-center ${
+            activeTab === "applications"
+              ? "border-indigo-650 text-indigo-650 dark:border-indigo-400 dark:text-indigo-400"
+              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+          }`}
+        >
+          Seller Applications (
+          {users.filter((u) => u.sellerStatus === "pending").length})
         </button>
       </div>
 
       {/* Main interactive lists */}
       <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800 min-h-[350px]">
-        
-        {/* TAB 1: GIGS MODERATION LIST */}
-        {activeTab === 'listings' && (
+        {/* TAB 4: SELLER APPLICATIONS */}
+        {activeTab === "applications" && (
           <div className="space-y-4 md:space-y-6">
             <div className="flex items-start md:items-center gap-2 text-slate-400 dark:text-slate-500 text-[11px] md:text-xs font-semibold uppercase tracking-wider">
               <BadgeInfo className="h-4 w-4 shrink-0 mt-0.5 md:mt-0" />
-              <span>As administrator, you can instantly moderate or remove services from the platform.</span>
+              <span>
+                Review pending applications from users who want to become
+                sellers.
+              </span>
+            </div>
+
+            {users.filter((u) => u.sellerStatus === "pending").length === 0 ? (
+              <div className="text-center py-12 md:py-24 animate-fade-in">
+                <ShieldAlert className="h-10 w-10 md:h-16 md:w-16 mx-auto text-slate-200 dark:text-slate-800 mb-3 md:mb-4" />
+                <h3 className="text-sm md:text-lg font-bold text-slate-700 dark:text-slate-300">
+                  No Pending Applications
+                </h3>
+                <p className="text-xs md:text-sm text-slate-400 dark:text-slate-500 max-w-sm mx-auto mt-2">
+                  All seller applications have been processed.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {users
+                  .filter((u) => u.sellerStatus === "pending")
+                  .map((u) => (
+                    <motion.div
+                      key={u.id}
+                      initial={{ opacity: 0, y: 5 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-4 md:p-6 rounded-xl md:rounded-2xl border border-slate-150 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-950/20"
+                    >
+                      <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <AnimeUserProfileIcon name={u.name} />
+                            <div>
+                              <span className="font-bold text-slate-800 dark:text-slate-100 block">
+                                {u.name}
+                              </span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
+                                {u.email}
+                              </span>
+                            </div>
+                          </div>
+                          {u.portfolio && (
+                            <div className="mt-3 space-y-2">
+                              <div>
+                                <strong className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-0.5">
+                                  Title
+                                </strong>
+                                <p className="text-sm text-slate-700 dark:text-slate-300">
+                                  {u.portfolio.title}
+                                </p>
+                              </div>
+                              <div>
+                                <strong className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-0.5">
+                                  Contact
+                                </strong>
+                                <p className="text-sm text-slate-700 dark:text-slate-300">
+                                  Email: {u.portfolio.contactEmail} | Phone:{" "}
+                                  {u.portfolio.contactPhone}
+                                </p>
+                              </div>
+                              <div>
+                                <strong className="text-xs text-slate-400 dark:text-slate-500 uppercase tracking-widest block mb-0.5">
+                                  Links
+                                </strong>
+                                <p className="text-sm text-slate-700 dark:text-slate-300">
+                                  {u.portfolio.linkedin && (
+                                    <a
+                                      href={u.portfolio.linkedin}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-indigo-500 hover:underline mr-3"
+                                    >
+                                      LinkedIn
+                                    </a>
+                                  )}
+                                  {u.portfolio.businessLink && (
+                                    <a
+                                      href={u.portfolio.businessLink}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-indigo-500 hover:underline"
+                                    >
+                                      Portfolio
+                                    </a>
+                                  )}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex flex-row md:flex-col gap-2 shrink-0">
+                          <button
+                            onClick={() => approveSellerApplication(u.id)}
+                            className="flex-1 md:flex-none px-4 py-2 border border-emerald-200 dark:border-emerald-900/50 bg-emerald-50 dark:bg-emerald-950/30 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 text-emerald-700 dark:text-emerald-400 font-bold text-xs rounded-lg transition-colors cursor-pointer text-center"
+                          >
+                            Approve
+                          </button>
+                          <button
+                            onClick={() => rejectSellerApplication(u.id)}
+                            className="flex-1 md:flex-none px-4 py-2 border border-rose-200 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-700 dark:text-rose-400 font-bold text-xs rounded-lg transition-colors cursor-pointer text-center"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* TAB 1: GIGS MODERATION LIST */}
+        {activeTab === "listings" && (
+          <div className="space-y-4 md:space-y-6">
+            <div className="flex items-start md:items-center gap-2 text-slate-400 dark:text-slate-500 text-[11px] md:text-xs font-semibold uppercase tracking-wider">
+              <BadgeInfo className="h-4 w-4 shrink-0 mt-0.5 md:mt-0" />
+              <span>
+                As administrator, you can instantly moderate or remove services
+                from the platform.
+              </span>
             </div>
 
             {gigs.length === 0 ? (
@@ -188,10 +353,18 @@ export function AdminDashboard() {
                           >
                             <td className="py-4 pr-4">
                               <div className="flex items-center gap-3">
-                                <img src={g.imageUrl} alt={g.title} className="h-10 w-10 rounded-lg object-cover" />
+                                <img
+                                  src={g.imageUrl}
+                                  alt={g.title}
+                                  className="h-10 w-10 rounded-lg object-cover"
+                                />
                                 <div className="min-w-0">
-                                  <span className="font-semibold text-sm text-slate-800 dark:text-slate-100 block line-clamp-1">{g.title}</span>
-                                  <span className="text-[10px] text-slate-440 dark:text-slate-500 font-mono">{g.id}</span>
+                                  <span className="font-semibold text-sm text-slate-800 dark:text-slate-100 block line-clamp-1">
+                                    {g.title}
+                                  </span>
+                                  <span className="text-[10px] text-slate-440 dark:text-slate-500 font-mono">
+                                    {g.id}
+                                  </span>
                                 </div>
                               </div>
                             </td>
@@ -200,8 +373,12 @@ export function AdminDashboard() {
                                 {g.category}
                               </span>
                             </td>
-                            <td className="py-4 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">{g.sellerName}</td>
-                            <td className="py-4 px-4 text-sm font-extrabold text-slate-800 dark:text-white">${g.price}</td>
+                            <td className="py-4 px-4 text-sm font-semibold text-slate-700 dark:text-slate-300">
+                              {g.sellerName}
+                            </td>
+                            <td className="py-4 px-4 text-sm font-extrabold text-slate-800 dark:text-white">
+                              ${g.price}
+                            </td>
                             <td className="py-4 pl-4 text-right">
                               <button
                                 onClick={() => deleteGig(g.id)}
@@ -231,29 +408,47 @@ export function AdminDashboard() {
                         className="p-4 rounded-xl border border-slate-150 dark:border-slate-800/80 bg-slate-50/40 dark:bg-slate-950/20 space-y-3"
                       >
                         <div className="flex items-start gap-3">
-                          <img src={g.imageUrl} alt={g.title} className="h-12 w-12 rounded-lg object-cover shrink-0 select-none" />
+                          <img
+                            src={g.imageUrl}
+                            alt={g.title}
+                            className="h-12 w-12 rounded-lg object-cover shrink-0 select-none"
+                          />
                           <div className="min-w-0 flex-1">
-                            <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-2 leading-tight select-text">{g.title}</h4>
-                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 select-text">{g.id}</p>
+                            <h4 className="font-bold text-sm text-slate-800 dark:text-slate-100 line-clamp-2 leading-tight select-text">
+                              {g.title}
+                            </h4>
+                            <p className="text-[10px] text-slate-400 dark:text-slate-500 font-mono mt-0.5 select-text">
+                              {g.id}
+                            </p>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-y-3.5 gap-x-2 pt-2.5 border-t border-slate-150 dark:border-slate-800/60 text-xs">
                           <div>
-                            <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">Domain</span>
+                            <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">
+                              Domain
+                            </span>
                             <span className="inline-flex rounded bg-indigo-550/10 dark:bg-indigo-950/40 px-2.5 py-0.5 text-[10px] font-extrabold text-indigo-700 dark:text-indigo-400 mt-1">
                               {g.category}
                             </span>
                           </div>
 
                           <div>
-                            <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">Seller</span>
-                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block truncate mt-1 select-text">{g.sellerName}</span>
+                            <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">
+                              Seller
+                            </span>
+                            <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block truncate mt-1 select-text">
+                              {g.sellerName}
+                            </span>
                           </div>
 
                           <div>
-                            <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">Price</span>
-                            <span className="text-sm font-extrabold text-slate-800 dark:text-white block mt-1 select-text">${g.price}</span>
+                            <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">
+                              Price
+                            </span>
+                            <span className="text-sm font-extrabold text-slate-800 dark:text-white block mt-1 select-text">
+                              ${g.price}
+                            </span>
                           </div>
 
                           <div className="flex items-end justify-end">
@@ -263,7 +458,9 @@ export function AdminDashboard() {
                               title="Delete Gig listing"
                             >
                               <Trash2 className="h-4 w-4 shrink-0" />
-                              <span className="text-xs font-bold">Delete Gig</span>
+                              <span className="text-xs font-bold">
+                                Delete Gig
+                              </span>
                             </button>
                           </div>
                         </div>
@@ -277,15 +474,18 @@ export function AdminDashboard() {
         )}
 
         {/* TAB 2: USERS LIST */}
-        {activeTab === 'users' && (
+        {activeTab === "users" && (
           <div className="space-y-4 md:space-y-6">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-start md:items-center gap-2 text-slate-400 dark:text-slate-500 text-[11px] md:text-xs font-semibold uppercase tracking-wider">
                 <BadgeInfo className="h-4 w-4 shrink-0 mt-0.5 md:mt-0" />
-                <span>Manage current registered users. Note: you cannot delete your own logged-in admin identity.</span>
+                <span>
+                  Manage current registered users. Note: you cannot delete your
+                  own logged-in admin identity.
+                </span>
               </div>
               <button
-                onClick={() => setSelectedUserForNotif('ALL')}
+                onClick={() => setSelectedUserForNotif("ALL")}
                 className="flex items-center gap-1.5 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shadow-sm disabled:opacity-50"
               >
                 <Bell className="h-4 w-4" />
@@ -318,13 +518,17 @@ export function AdminDashboard() {
                           <div className="flex items-center gap-2.5">
                             <AnimeUserProfileIcon name={u.name} />
                             <div>
-                              <span className="font-semibold text-sm text-slate-800 dark:text-slate-100 block">{u.name}</span>
-                              <span className="text-xs text-slate-500 dark:text-slate-400">{u.email}</span>
+                              <span className="font-semibold text-sm text-slate-800 dark:text-slate-100 block">
+                                {u.name}
+                              </span>
+                              <span className="text-xs text-slate-500 dark:text-slate-400">
+                                {u.email}
+                              </span>
                             </div>
                           </div>
                         </td>
                         <td className="py-4 px-4">
-                          {u.role === 'admin' ? (
+                          {u.role === "admin" ? (
                             <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1 text-xs font-bold text-amber-700 dark:text-amber-400 ring-1 ring-amber-600/10">
                               <ShieldAlert className="h-3.5 w-3.5 animate-pulse" />
                               Admin
@@ -354,7 +558,10 @@ export function AdminDashboard() {
                               onClick={() => deleteUser(u.id)}
                               className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-rose-600 dark:hover:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
                               title="Moderation delete account"
-                              disabled={u.email === 'maliyagigs@gmail.com' || u.id === 'u_admin'}
+                              disabled={
+                                u.email === "maliyagigs@gmail.com" ||
+                                u.id === "u_admin"
+                              }
                             >
                               <Trash2 className="h-4 w-4" />
                             </button>
@@ -381,15 +588,21 @@ export function AdminDashboard() {
                     <div className="flex items-center gap-3">
                       <AnimeUserProfileIcon name={u.name} />
                       <div className="min-w-0 flex-1">
-                        <span className="font-bold text-sm text-slate-800 dark:text-slate-100 block truncate select-text">{u.name}</span>
-                        <span className="text-xs text-slate-500 dark:text-slate-400 block truncate select-text">{u.email}</span>
+                        <span className="font-bold text-sm text-slate-800 dark:text-slate-100 block truncate select-text">
+                          {u.name}
+                        </span>
+                        <span className="text-xs text-slate-500 dark:text-slate-400 block truncate select-text">
+                          {u.email}
+                        </span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-y-3.5 gap-x-2 pt-2.5 border-t border-slate-150 dark:border-slate-800/60 text-xs">
                       <div>
-                        <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">Identity</span>
-                        {u.role === 'admin' ? (
+                        <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">
+                          Identity
+                        </span>
+                        {u.role === "admin" ? (
                           <span className="inline-flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-950/30 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-400 mt-1">
                             <ShieldAlert className="h-3 w-3 shrink-0" />
                             Admin
@@ -402,7 +615,9 @@ export function AdminDashboard() {
                       </div>
 
                       <div>
-                        <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">Joined Date</span>
+                        <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wide font-sans">
+                          Joined Date
+                        </span>
                         <span className="flex items-center gap-1 text-[11px] font-mono text-slate-500 dark:text-slate-455 mt-1 select-text">
                           <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
                           {u.joinedDate}
@@ -422,7 +637,10 @@ export function AdminDashboard() {
                           onClick={() => deleteUser(u.id)}
                           className="h-9 flex-1 inline-flex items-center justify-center gap-1.5 rounded-xl border border-rose-100 dark:border-rose-950/50 text-rose-600 dark:text-rose-455 bg-rose-50/50 dark:bg-rose-950/25 hover:bg-rose-100 dark:hover:bg-rose-950/40 transition-colors cursor-pointer disabled:opacity-35 disabled:pointer-events-none"
                           title="Moderation delete account"
-                          disabled={u.email === 'maliyagigs@gmail.com' || u.id === 'u_admin'}
+                          disabled={
+                            u.email === "maliyagigs@gmail.com" ||
+                            u.id === "u_admin"
+                          }
                         >
                           <Trash2 className="h-4 w-4 shrink-0" />
                           <span className="text-xs font-bold">Delete</span>
@@ -437,11 +655,14 @@ export function AdminDashboard() {
         )}
 
         {/* TAB 3: INQUIRIES AUDIT LEDGER */}
-        {activeTab === 'inquiries' && (
+        {activeTab === "inquiries" && (
           <div className="space-y-4 md:space-y-6">
             <div className="flex items-start md:items-center gap-2 text-slate-400 dark:text-slate-500 text-[11px] md:text-xs font-semibold uppercase tracking-wider">
               <BadgeInfo className="h-4 w-4 shrink-0 mt-0.5 md:mt-0" />
-              <span>General Platform Audits - monitor text transmissions & custom offerings.</span>
+              <span>
+                General Platform Audits - monitor text transmissions & custom
+                offerings.
+              </span>
             </div>
 
             {inquiries.length === 0 ? (
@@ -470,18 +691,30 @@ export function AdminDashboard() {
                         >
                           <td className="py-4 pr-4">
                             <div>
-                              <span className="font-mono text-xs font-bold text-slate-800 dark:text-slate-350 block">{inq.id}</span>
-                              <span className="text-[10px] text-slate-440 dark:text-slate-500">{new Date(inq.createdAt).toLocaleString()}</span>
+                              <span className="font-mono text-xs font-bold text-slate-800 dark:text-slate-350 block">
+                                {inq.id}
+                              </span>
+                              <span className="text-[10px] text-slate-440 dark:text-slate-500">
+                                {new Date(inq.createdAt).toLocaleString()}
+                              </span>
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-xs font-semibold text-slate-700 dark:text-slate-350">{inq.gigTitle}</td>
+                          <td className="py-4 px-4 text-xs font-semibold text-slate-700 dark:text-slate-350">
+                            {inq.gigTitle}
+                          </td>
                           <td className="py-4 px-4">
                             <div className="text-xs">
-                              <span className="font-bold text-slate-800 dark:text-slate-100 block">{inq.buyerName}</span>
-                              <span className="text-[10px] text-slate-400 font-mono">{inq.buyerEmail}</span>
+                              <span className="font-bold text-slate-800 dark:text-slate-100 block">
+                                {inq.buyerName}
+                              </span>
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                {inq.buyerEmail}
+                              </span>
                             </div>
                           </td>
-                          <td className="py-4 px-4 text-xs font-semibold text-slate-750 dark:text-slate-300">{inq.sellerName}</td>
+                          <td className="py-4 px-4 text-xs font-semibold text-slate-750 dark:text-slate-300">
+                            {inq.sellerName}
+                          </td>
                           <td className="py-4 pl-4 text-right">
                             <span className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">
                               ${inq.proposedBudget}
@@ -502,30 +735,55 @@ export function AdminDashboard() {
                     >
                       <div className="flex justify-between items-start gap-2">
                         <div>
-                          <span className="font-mono text-[11px] font-bold text-slate-800 dark:text-slate-350 block select-text">{inq.id}</span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-light select-text">{new Date(inq.createdAt).toLocaleString()}</span>
+                          <span className="font-mono text-[11px] font-bold text-slate-800 dark:text-slate-350 block select-text">
+                            {inq.id}
+                          </span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-light select-text">
+                            {new Date(inq.createdAt).toLocaleString()}
+                          </span>
                         </div>
                         <div className="text-right shrink-0">
-                          <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-sans">Offer Budget</span>
-                          <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 select-text">${inq.proposedBudget}</span>
+                          <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider font-sans">
+                            Offer Budget
+                          </span>
+                          <span className="text-sm font-extrabold text-emerald-600 dark:text-emerald-400 select-text">
+                            ${inq.proposedBudget}
+                          </span>
                         </div>
                       </div>
 
                       <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-850 text-xs">
-                        <span className="block text-[9px] text-slate-400 dark:text-slate-500 font-extrabold uppercase tracking-wider mb-1">Service Requested</span>
-                        <p className="font-semibold text-slate-800 dark:text-slate-200 leading-snug select-text">{inq.gigTitle}</p>
+                        <span className="block text-[9px] text-slate-400 dark:text-slate-500 font-extrabold uppercase tracking-wider mb-1">
+                          Service Requested
+                        </span>
+                        <p className="font-semibold text-slate-800 dark:text-slate-200 leading-snug select-text">
+                          {inq.gigTitle}
+                        </p>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3.5 pt-2.5 text-[11px] border-t border-slate-150 dark:border-slate-800/60">
                         <div>
-                          <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">Buyer</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-100 block mt-0.5 select-text">{inq.buyerName}</span>
-                          <span className="text-[10px] text-slate-400 dark:text-slate-500 font-mono block truncate mt-0.5 select-text" title={inq.buyerEmail}>{inq.buyerEmail}</span>
+                          <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            Buyer
+                          </span>
+                          <span className="font-bold text-slate-800 dark:text-slate-100 block mt-0.5 select-text">
+                            {inq.buyerName}
+                          </span>
+                          <span
+                            className="text-[10px] text-slate-400 dark:text-slate-500 font-mono block truncate mt-0.5 select-text"
+                            title={inq.buyerEmail}
+                          >
+                            {inq.buyerEmail}
+                          </span>
                         </div>
 
                         <div>
-                          <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">Assigned Seller</span>
-                          <span className="font-bold text-slate-700 dark:text-slate-300 block mt-0.5 select-text truncate">{inq.sellerName}</span>
+                          <span className="block text-[9px] text-slate-400 dark:text-slate-500 uppercase tracking-wider">
+                            Assigned Seller
+                          </span>
+                          <span className="font-bold text-slate-700 dark:text-slate-300 block mt-0.5 select-text truncate">
+                            {inq.sellerName}
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -535,14 +793,16 @@ export function AdminDashboard() {
             )}
           </div>
         )}
-
       </div>
 
       {/* NOTIFICATION MODAL */}
       <AnimatePresence>
         {selectedUserForNotif && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={() => setSelectedUserForNotif(null)} />
+            <div
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"
+              onClick={() => setSelectedUserForNotif(null)}
+            />
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -555,20 +815,22 @@ export function AdminDashboard() {
               >
                 <X className="h-5 w-5" />
               </button>
-              
+
               <h3 className="text-lg font-bold font-display text-slate-800 dark:text-white flex items-center gap-2 mb-1">
                 <Send className="h-5 w-5 text-indigo-500" />
                 Dispatch Notification
               </h3>
               <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
-                {selectedUserForNotif === 'ALL' 
-                  ? 'Send a platform-wide system notification to all users.'
+                {selectedUserForNotif === "ALL"
+                  ? "Send a platform-wide system notification to all users."
                   : `Send a direct alert to ${selectedUserForNotif?.name}.`}
               </p>
 
               <form onSubmit={handleSendNotification} className="space-y-4">
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1.5">Notification Subject</label>
+                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1.5">
+                    Notification Subject
+                  </label>
                   <input
                     type="text"
                     required
@@ -579,7 +841,9 @@ export function AdminDashboard() {
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1.5">Message Body</label>
+                  <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1.5">
+                    Message Body
+                  </label>
                   <textarea
                     required
                     rows={4}
@@ -589,7 +853,7 @@ export function AdminDashboard() {
                     className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-transparent px-3 py-2.5 text-sm focus:border-indigo-500 focus:outline-none dark:text-white resize-none"
                   />
                 </div>
-                
+
                 <button
                   type="submit"
                   disabled={notifSentFeedback}
@@ -601,7 +865,7 @@ export function AdminDashboard() {
                       Dispatched Successfully
                     </span>
                   ) : (
-                    'Transmitting Notification'
+                    "Transmitting Notification"
                   )}
                 </button>
               </form>

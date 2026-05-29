@@ -20,6 +20,7 @@ export interface User {
   category: UserCategory;
   joinedDate: string;
   portfolio?: SellerPortfolio;
+  sellerStatus?: 'none' | 'pending' | 'approved' | 'rejected';
 }
 
 export interface Gig {
