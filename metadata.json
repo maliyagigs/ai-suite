@@ -1,0 +1,6 @@
+{
+  "name": "MelAgent",
+  "description": "A premium service marketplace platform supporting secure admin and standard user profiles, with an animated buyer/seller toggle, active seller gig creation, and full buyer showcase search, details, and checkout workflows.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
