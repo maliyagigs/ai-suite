@@ -570,9 +570,6 @@ export function AuthScreen() {
             >
               Start Exploring <ChevronRight className="w-5 h-5" />
             </button>
-            <button className="w-full sm:w-auto flex items-center justify-center gap-2 bg-slate-900 text-white border border-slate-800 hover:bg-slate-800/80 px-8 py-4 rounded-full text-base font-bold transition cursor-pointer">
-              <PlayCircle className="w-5 h-5 text-indigo-450" /> Watch Demo
-            </button>
           </motion.div>
 
           {/* Social Proof Stats */}
