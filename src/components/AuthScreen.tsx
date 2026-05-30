@@ -468,13 +468,6 @@ export function AuthScreen() {
       return;
     }
 
-    if (cleanEmail === "maliyagigs@gmail.com" && password !== "g2jabB80") {
-      setErrorMsg(
-        "Incorrect security password for this administrator account.",
-      );
-      return;
-    }
-
     if (activeTab === "login") {
       const result = await login(cleanEmail, password);
       if (!result.success) {

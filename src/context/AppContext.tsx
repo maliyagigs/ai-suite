@@ -90,99 +90,21 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 // Local fallback defaults until fetched
 const ALEX_PORTFOLIO: SellerPortfolio = {
-  title: "Full Stack Service Architect & UI Developer",
-  description:
-    "I build hyper-scalable web apps utilizing modern React, Redux, Node.js, and Google AI services. Over 6 years of expertise delivering high-performance SaaS platforms with sleek visual themes.",
-  skills: [
-    "TypeScript",
-    "React 19",
-    "Tailwind v4",
-    "Node.js",
-    "Google AI integration",
-    "Figma UX Design",
-  ],
-  education: "B.S. in Computer Science - Stanford University",
-  linkedin: "https://linkedin.com/in/alex-rivera-melagent-demo",
-  businessLink: "https://alexrivera.dev",
-  contactEmail: "alex.rivera@melagent-freelancer.net",
-  contactPhone: "+1 (555) 321-4920",
+  title: "",
+  description: "",
+  skills: [],
+  education: "",
+  linkedin: "",
+  businessLink: "",
+  contactEmail: "",
+  contactPhone: "",
 };
 
-const DEFAULT_USERS: User[] = [
-  {
-    id: "u_admin",
-    email: "maliyagigs@gmail.com",
-    name: "Maliya Admin",
-    role: "admin",
-    category: "buyer",
-    joinedDate: "2026-01-01",
-  },
-  {
-    id: "u_alex",
-    email: "seller@melagent.com",
-    name: "Alex Rivera",
-    role: "user",
-    category: "seller",
-    joinedDate: "2026-02-10",
-    portfolio: ALEX_PORTFOLIO,
-    sellerStatus: "approved",
-  },
-  {
-    id: "u_buyer",
-    email: "buyer@melagent.com",
-    name: "David Chen",
-    role: "user",
-    category: "buyer",
-    joinedDate: "2026-03-01",
-  },
-];
+const DEFAULT_USERS: User[] = [];
 
-const DEFAULT_GIGS: Gig[] = [
-  {
-    id: "g1",
-    title: "Custom Full Stack React Platform with Elegant Themes",
-    description:
-      "I will design and build a state-of-the-art Single Page Application. Features clean layouts, responsive grid panels, complete type safety, and customized user flows.",
-    price: 350,
-    category: "Development",
-    tags: ["React", "TypeScript", "Tailwind", "Sleek UI"],
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    imageUrl:
-      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop",
-    additionalImages: [
-      "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=600&auto=format&fit=crop",
-    ],
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    pdfUrl:
-      "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    pdfName: "React_App_Development_Syllabus.pdf",
-    views: 142,
-    inquiryCount: 3,
-    rating: 5.0,
-    ratingCount: 15,
-    createdAt: "2026-05-20",
-  },
-];
+const DEFAULT_GIGS: Gig[] = [];
 
-const DEFAULT_INQUIRIES: Inquiry[] = [
-  {
-    id: "inq_1",
-    gigId: "g1",
-    gigTitle: "Custom Full Stack React Platform with Elegant Themes",
-    buyerId: "u_buyer",
-    buyerName: "David Chen",
-    buyerEmail: "buyer@melagent.com",
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    proposedBudget: 350,
-    message:
-      "Hello Alex! I saw your react gig and would love to build a custom customer portal. Do you have availability next week?",
-    status: "pending",
-    createdAt: "2026-05-26T14:30:00Z",
-  },
-];
+const DEFAULT_INQUIRIES: Inquiry[] = [];
 
 const DEFAULT_NOTIFICATIONS: Notification[] = [
   {
@@ -224,11 +146,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         if (!res.ok) throw new Error("Could not fetch remote server data");
         const data = await res.json();
         if (active) {
-          if (data.users && data.users.length > 0) setUsers(data.users);
-          if (data.gigs && data.gigs.length > 0) setGigs(data.gigs);
-          if (data.inquiries && data.inquiries.length > 0) setInquiries(data.inquiries);
-          if (data.orders && data.orders.length > 0) setOrders(data.orders);
-          if (data.notifications && data.notifications.length > 0) setNotifications(data.notifications);
+          if (data.users !== undefined) setUsers(data.users);
+          if (data.gigs !== undefined) setGigs(data.gigs);
+          if (data.inquiries !== undefined) setInquiries(data.inquiries);
+          if (data.orders !== undefined) setOrders(data.orders);
+          if (data.notifications !== undefined) setNotifications(data.notifications);
 
           // Keep local cached user in sync with remote fields
           const cached = localStorage.getItem("melagent_current_v2");

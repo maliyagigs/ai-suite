@@ -20,7 +20,8 @@ import {
   FileText,
   Video,
   ArrowLeft,
-  UploadCloud
+  UploadCloud,
+  LogOut
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
@@ -47,7 +48,8 @@ export function ProfilePage() {
     disputeOrder,
     updateUserProfile,
     updatePortfolio,
-    setActiveView
+    setActiveView,
+    logout
   } = useApp();
 
   const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'customizations' | 'settings' | 'role'>('orders');
@@ -78,12 +80,12 @@ export function ProfilePage() {
   // Dynamic styling helpers to ensure perfect text accessibility contrast in dark and light modes
   const getAccentBgClass = () => {
     switch (customTheme) {
-      case 'emerald': return 'bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white';
-      case 'amber': return 'bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500 text-white';
-      case 'cyan': return 'bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-600 text-white';
-      case 'purple': return 'bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white';
-      case 'rose': return 'bg-rose-600 hover:bg-rose-700 dark:bg-rose-700 dark:hover:bg-rose-600 text-white';
-      default: return 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-605 text-white';
+      case 'emerald': return 'bg-emerald-600 hover:bg-emerald-700 dark:bg-emerald-700 dark:hover:bg-emerald-600 text-white !text-white';
+      case 'amber': return 'bg-amber-500 hover:bg-amber-600 dark:bg-amber-600 dark:hover:bg-amber-500 text-white !text-white';
+      case 'cyan': return 'bg-cyan-600 hover:bg-cyan-700 dark:bg-cyan-700 dark:hover:bg-cyan-600 text-white !text-white';
+      case 'purple': return 'bg-purple-600 hover:bg-purple-700 dark:bg-purple-700 dark:hover:bg-purple-600 text-white !text-white';
+      case 'rose': return 'bg-rose-600 hover:bg-rose-700 dark:bg-rose-700 dark:hover:bg-rose-600 text-white !text-white';
+      default: return 'bg-indigo-600 hover:bg-indigo-700 dark:bg-indigo-700 dark:hover:bg-indigo-600 text-white !text-white';
     }
   };
 
@@ -101,15 +103,15 @@ export function ProfilePage() {
   const getAccentClasses = (isActive: boolean) => {
     if (isActive) {
       switch (customTheme) {
-        case 'emerald': return 'bg-emerald-600 text-white shadow-md shadow-emerald-550/10';
-        case 'amber': return 'bg-amber-500 text-white shadow-md shadow-amber-550/10';
-        case 'cyan': return 'bg-cyan-600 text-white shadow-md shadow-cyan-550/10';
-        case 'purple': return 'bg-purple-600 text-white shadow-md shadow-purple-550/10';
-        case 'rose': return 'bg-rose-600 text-white shadow-md shadow-rose-550/10';
-        default: return 'bg-indigo-600 text-white shadow-md shadow-indigo-550/15';
+        case 'emerald': return 'bg-emerald-600 text-white dark:!text-white shadow-md shadow-emerald-550/10';
+        case 'amber': return 'bg-amber-500 text-white dark:!text-white shadow-md shadow-amber-550/10';
+        case 'cyan': return 'bg-cyan-600 text-white dark:!text-white shadow-md shadow-cyan-550/10';
+        case 'purple': return 'bg-purple-600 text-white dark:!text-white shadow-md shadow-purple-550/10';
+        case 'rose': return 'bg-rose-600 text-white dark:!text-white shadow-md shadow-rose-550/10';
+        default: return 'bg-indigo-600 text-white dark:!text-white shadow-md shadow-indigo-550/15';
       }
     } else {
-      return 'text-slate-700 dark:text-slate-350 hover:bg-slate-100 dark:hover:bg-slate-800/60';
+      return 'text-slate-705 dark:!text-white hover:bg-slate-100 dark:hover:bg-slate-800/60';
     }
   };
 
@@ -967,7 +969,7 @@ export function ProfilePage() {
                       <button
                         type="submit"
                         disabled={isSaving}
-                        className="px-5 py-2.5 bg-indigo-650 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow"
+                        className={`px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow ${getAccentBgClass()}`}
                       >
                         <Save className="h-4 w-4" />
                         {isSaving ? 'Saving Configurations...' : 'Save Core Details'}
@@ -1127,7 +1129,7 @@ export function ProfilePage() {
 
                   <button
                     onClick={toggleCategory}
-                    className="px-6 py-3.5 bg-indigo-650 hover:bg-indigo-750 text-white rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer shadow shadow-indigo-650/15"
+                    className={`px-6 py-3.5 rounded-xl text-xs font-extrabold flex items-center gap-2 cursor-pointer shadow ${getAccentBgClass()}`}
                   >
                     <ArrowLeftRight className="h-4 w-4" />
                     Switch working mode to {currentUser.category === 'buyer' ? 'Seller' : 'Buyer'}
@@ -1139,6 +1141,18 @@ export function ProfilePage() {
           </AnimatePresence>
         </div>
 
+      </div>
+
+      {/* Elegant Sign Out Button Block at the bottom of the Profile Page */}
+      <div className="pt-8 border-t border-slate-200 dark:border-slate-800 flex justify-center pb-6">
+        <button
+          onClick={logout}
+          className="flex items-center gap-2.5 px-6 py-3 rounded-2xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 text-rose-600 dark:text-rose-400 border border-slate-205 dark:border-slate-800 hover:border-rose-200 dark:hover:border-rose-900/40 text-xs font-extrabold cursor-pointer transition shadow-sm active:scale-95"
+          title="Sign out of working session"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign Out of MelAgent
+        </button>
       </div>
 
     </div>

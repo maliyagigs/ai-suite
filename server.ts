@@ -4,6 +4,9 @@ import fs from "fs";
 import { fileURLToPath } from "url";
 import { createServer as createViteServer } from "vite";
 import { OAuth2Client } from "google-auth-library";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,6 +14,9 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = 3000;
 const DB_FILE = path.join(__dirname, "server_db.json");
+
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || "maliyagigs@gmail.com";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "g2jabB80";
 
 const googleClient = new OAuth2Client("629111524631-3q4s91g3c69vtqmok0tu1a1io9haonfl.apps.googleusercontent.com");
 
@@ -118,147 +124,30 @@ interface DatabaseSchema {
 }
 
 const ALEX_PORTFOLIO: SellerPortfolio = {
-  title: "Full Stack Service Architect & UI Developer",
-  description:
-    "I build hyper-scalable web apps utilizing modern React, Redux, Node.js, and Google AI services. Over 6 years of expertise delivering high-performance SaaS platforms with sleek visual themes.",
-  skills: [
-    "TypeScript",
-    "React 19",
-    "Tailwind v4",
-    "Node.js",
-    "Google AI integration",
-    "Figma UX Design",
-  ],
-  education: "B.S. in Computer Science - Stanford University",
-  linkedin: "https://linkedin.com/in/alex-rivera-melagent-demo",
-  businessLink: "https://alexrivera.dev",
-  contactEmail: "alex.rivera@melagent-freelancer.net",
-  contactPhone: "+1 (555) 321-4920",
+  title: "",
+  description: "",
+  skills: [],
+  education: "",
+  linkedin: "",
+  businessLink: "",
+  contactEmail: "",
+  contactPhone: "",
 };
 
 const DEFAULT_USERS: User[] = [
   {
     id: "u_admin",
-    email: "maliyagigs@gmail.com",
+    email: ADMIN_EMAIL,
     name: "Maliya Admin",
     role: "admin",
     category: "buyer",
     joinedDate: "2026-01-01",
-  },
-  {
-    id: "u_alex",
-    email: "seller@melagent.com",
-    name: "Alex Rivera",
-    role: "user",
-    category: "seller",
-    joinedDate: "2026-02-10",
-    portfolio: ALEX_PORTFOLIO,
-    sellerStatus: "approved",
-  },
-  {
-    id: "u_buyer",
-    email: "buyer@melagent.com",
-    name: "David Chen",
-    role: "user",
-    category: "buyer",
-    joinedDate: "2026-03-01",
-  },
+  }
 ];
 
-const DEFAULT_GIGS: Gig[] = [
-  {
-    id: "g1",
-    title: "Custom Full Stack React Platform with Elegant Themes",
-    description:
-      "I will design and build a state-of-the-art Single Page Application. Features clean layouts, responsive grid panels, complete type safety, and customized user flows.",
-    price: 350,
-    category: "Development",
-    tags: ["React", "TypeScript", "Tailwind", "Sleek UI"],
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    imageUrl:
-      "https://images.unsplash.com/photo-1555066931-4365d14bab8c?q=80&w=800&auto=format&fit=crop",
-    additionalImages: [
-      "https://images.unsplash.com/photo-1542831371-29b0f74f9713?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?q=80&w=600&auto=format&fit=crop",
-    ],
-    videoUrl: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-    pdfUrl:
-      "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf",
-    pdfName: "React_App_Development_Syllabus.pdf",
-    views: 142,
-    inquiryCount: 3,
-    rating: 5.0,
-    ratingCount: 15,
-    createdAt: "2026-05-20",
-  },
-  {
-    id: "g2",
-    title: "Visual Identity & Complete Minimalist Branding Kit",
-    description:
-      "Establish a cohesive aesthetic. I will craft a corporate brand portfolio containing vector files, customized design rules, color presets, and social media banners.",
-    price: 150,
-    category: "Design",
-    tags: ["Branding", "Figma", "Logo Design", "Aesthetics"],
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    imageUrl:
-      "https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800&auto=format&fit=crop",
-    additionalImages: [
-      "https://images.unsplash.com/photo-1509343256512-d77a5cb3791b?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1629752187687-3d3c7ea3a21b?q=80&w=600&auto=format&fit=crop",
-    ],
-    videoUrl: "",
-    pdfUrl: "https://pdfobject.com/pdf/sample.pdf",
-    pdfName: "Branding_Guide_Template.pdf",
-    views: 89,
-    inquiryCount: 1,
-    rating: 4.8,
-    ratingCount: 6,
-    createdAt: "2026-05-22",
-  },
-  {
-    id: "g3",
-    title: "Advanced AI Chatbot & Agent API Integration",
-    description:
-      "Integrate the flagship Gemini Pro conversational API into your live business channel or internal slack workspace to automate client workflows with high fidelity.",
-    price: 490,
-    category: "AI Services",
-    tags: ["Gemini", "Chatbot", "Workflow AI", "Automation"],
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    imageUrl:
-      "https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=800&auto=format&fit=crop",
-    additionalImages: [
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop",
-    ],
-    videoUrl: "https://www.youtube.com/embed/ysz5S6PUM-U",
-    pdfUrl: "",
-    views: 210,
-    inquiryCount: 5,
-    rating: 4.9,
-    ratingCount: 22,
-    createdAt: "2026-05-25",
-  },
-];
+const DEFAULT_GIGS: Gig[] = [];
 
-const DEFAULT_INQUIRIES: Inquiry[] = [
-  {
-    id: "inq_1",
-    gigId: "g1",
-    gigTitle: "Custom Full Stack React Platform with Elegant Themes",
-    buyerId: "u_buyer",
-    buyerName: "David Chen",
-    buyerEmail: "buyer@melagent.com",
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    proposedBudget: 350,
-    message:
-      "Hello Alex! I saw your react gig and would love to build a custom customer portal. Do you have availability next week?",
-    status: "pending",
-    createdAt: "2026-05-26T14:30:00Z",
-  },
-];
+const DEFAULT_INQUIRIES: Inquiry[] = [];
 
 const DEFAULT_NOTIFICATIONS: Notification[] = [
   {
@@ -272,36 +161,7 @@ const DEFAULT_NOTIFICATIONS: Notification[] = [
   },
 ];
 
-const DEFAULT_ORDERS: Order[] = [
-  {
-    id: "ord_1",
-    gigId: "g1",
-    gigTitle: "Custom Full Stack React Platform with Elegant Themes",
-    price: 350,
-    buyerId: "u_buyer",
-    buyerName: "David Chen",
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    status: "in_progress",
-    createdAt: "2026-05-27T10:00:00Z"
-  },
-  {
-    id: "ord_2",
-    gigId: "g2",
-    gigTitle: "Visual Identity & Complete Minimalist Branding Kit",
-    price: 150,
-    buyerId: "u_buyer",
-    buyerName: "David Chen",
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    status: "completed",
-    rating: 5,
-    ratingComment: "Alex did an outstanding job crafting our logo and vector style guides. Highly recommend standard of work!",
-    createdAt: "2026-05-24T08:30:00Z",
-    deliveredAt: "2026-05-25T11:00:00Z",
-    completedAt: "2026-05-25T14:20:00Z"
-  }
-];
+const DEFAULT_ORDERS: Order[] = [];
 
 // Helper to load/save JSON DB
 function loadDB(): DatabaseSchema {
@@ -379,13 +239,13 @@ app.post("/api/auth/login", (req, res) => {
   }
 
   const cleanEmail = email.toLowerCase().trim();
-  const isAdminAccount = cleanEmail === "maliyagigs@gmail.com" && pass === "g2jabB80";
+  const isAdminAccount = cleanEmail === ADMIN_EMAIL && pass === ADMIN_PASSWORD;
 
   const db = loadDB();
   let user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
 
   if (user) {
-    if (cleanEmail === "maliyagigs@gmail.com" && pass !== "g2jabB80") {
+    if (cleanEmail === ADMIN_EMAIL && pass !== ADMIN_PASSWORD) {
       return res.status(401).json({ success: false, message: "Invalid credentials for admin entry." });
     }
 
@@ -423,13 +283,13 @@ app.post("/api/auth/register", (req, res) => {
   }
 
   const cleanEmail = email.toLowerCase().trim();
-  const isAdminAccount = cleanEmail === "maliyagigs@gmail.com" && pass === "g2jabB80";
+  const isAdminAccount = cleanEmail === ADMIN_EMAIL && pass === ADMIN_PASSWORD;
 
   const db = loadDB();
   const existing = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
   if (existing) {
     // If user exists, default to log in
-    if (cleanEmail === "maliyagigs@gmail.com" && pass !== "g2jabB80") {
+    if (cleanEmail === ADMIN_EMAIL && pass !== ADMIN_PASSWORD) {
       return res.status(401).json({ success: false, message: "Invalid credentials for admin entry." });
     }
     if (isAdminAccount && existing.role !== "admin") {
@@ -473,7 +333,7 @@ app.post("/api/auth/google", async (req, res) => {
 
     const cleanEmail = payload.email.toLowerCase().trim();
     const name = payload.name || cleanEmail.split("@")[0];
-    const isAdminAccount = cleanEmail === "maliyagigs@gmail.com";
+    const isAdminAccount = cleanEmail === ADMIN_EMAIL;
 
     const db = loadDB();
     let user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);

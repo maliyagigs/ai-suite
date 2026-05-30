@@ -62,8 +62,13 @@ export function Navbar() {
           </span>
         </button>
 
-        {/* Central Controls: Buyer/Seller Switcher (Only for standard non-admins) */}
-        <div className="flex items-center gap-1 sm:gap-6 mx-1 sm:mx-0 min-w-0 md:grow md:justify-center">
+        {/* Dynamic Spacer to push tools to the right side */}
+        <div className="grow" />
+
+        {/* Right side Action Bar */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+
+          {/* Moved Working Mode Switcher to the top right section */}
           {!isAdmin ? (
             <div className="relative flex items-center rounded-full bg-slate-100 dark:bg-slate-800 p-0.5 sm:p-1 shrink-0">
               <motion.div
@@ -81,7 +86,7 @@ export function Navbar() {
                 onClick={() => {
                   if (isSeller) toggleCategory();
                 }}
-                className={`relative z-10 flex items-center gap-1 px-2 py-0.5 sm:px-4 sm:py-1.5 text-[9px] sm:text-xs font-bold tracking-wider transition-colors duration-200 cursor-pointer ${
+                className={`relative z-10 flex items-center gap-1.5 px-2.5 py-1 text-[10px] sm:text-xs font-bold tracking-wider transition-colors duration-200 cursor-pointer ${
                   !isSeller 
                     ? 'text-indigo-600 dark:text-indigo-400' 
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -96,7 +101,7 @@ export function Navbar() {
                 onClick={() => {
                   if (!isSeller) toggleCategory();
                 }}
-                className={`relative z-10 flex items-center gap-1 px-2 py-0.5 sm:px-4 sm:py-1.5 text-[9px] sm:text-xs font-bold tracking-wider transition-colors duration-200 cursor-pointer ${
+                className={`relative z-10 flex items-center gap-1.5 px-2.5 py-1 text-[10px] sm:text-xs font-bold tracking-wider transition-colors duration-200 cursor-pointer ${
                   isSeller 
                     ? 'text-indigo-600 dark:text-indigo-400' 
                     : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
@@ -107,16 +112,11 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2 py-1 md:px-3.5 md:py-1.5 text-[10px] md:text-xs font-bold tracking-wider text-amber-700 dark:text-amber-400 ring-1 ring-amber-500/20 shrink-0">
+            <div className="flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2 py-1 md:px-2.5 md:py-1 text-[10px] md:text-xs font-bold tracking-wider text-amber-700 dark:text-amber-400 ring-1 ring-amber-500/20 shrink-0">
               <Shield className="h-3.5 w-3.5 animate-pulse" />
-              <span className="hidden min-[480px]:inline">ADMIN PANEL</span>
-              <span className="min-[480px]:hidden">ADMIN</span>
+              <span>ADMIN</span>
             </div>
           )}
-        </div>
-
-        {/* Right side Action Bar */}
-        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           
           {/* Notifications Dropdown Panel */}
           <div className="relative" ref={popupRef}>
@@ -221,7 +221,7 @@ export function Navbar() {
           {/* Logged in entity credentials info with beautiful clickable Avatar */}
           <button
             onClick={() => setActiveView(activeView === 'profile' ? 'dashboard' : 'profile')}
-            className={`flex items-center gap-2.5 text-left border rounded-xl p-1 px-2.5 transition cursor-pointer ${
+            className={`flex items-center gap-2.5 text-left border rounded-full p-1 px-2.5 transition cursor-pointer ${
               activeView === 'profile'
                 ? 'border-indigo-500 bg-indigo-50/10 dark:bg-indigo-950/20'
                 : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
@@ -232,10 +232,10 @@ export function Navbar() {
               <img
                 src={currentUser.avatarUrl}
                 alt={currentUser.name}
-                className="w-7 h-7 rounded-lg object-cover border border-slate-350 dark:border-slate-700"
+                className="w-7 h-7 rounded-full object-cover border border-slate-350 dark:border-slate-700"
               />
             ) : (
-              <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-display text-[10px] font-extrabold flex items-center justify-center">
+              <div className="w-7 h-7 rounded-full bg-indigo-600 text-white font-display text-[10px] font-extrabold flex items-center justify-center">
                 {currentUser.name[0].toUpperCase()}
               </div>
             )}
