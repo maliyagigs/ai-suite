@@ -13,9 +13,12 @@ const PRESET_IMAGES = [
 ];
 
 export function SellerDashboard() {
-  const { currentUser, gigs, addGig, deleteGig, inquiries, updatePortfolio } = useApp();
+  const { currentUser, gigs, addGig, deleteGig, inquiries, updatePortfolio, respondToInquiry } = useApp();
 
   // Active form states
+  const [replyInquiryId, setReplyInquiryId] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState('');
+
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState<number>(50);
@@ -584,12 +587,86 @@ export function SellerDashboard() {
                       "{inq.message}"
                     </p>
 
+                    {inq.sellerResponse && (
+                      <div className="p-3.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/25 border border-indigo-100/50 dark:border-indigo-900/55 text-xs animate-fade-in">
+                        <span className="font-extrabold text-indigo-700 dark:text-indigo-400 block mb-1">Your response proposal:</span>
+                        <p className="text-slate-700 dark:text-slate-300 italic">"{inq.sellerResponse}"</p>
+                        {inq.respondedAt && (
+                          <span className="block text-[9px] text-slate-400 dark:text-slate-500 mt-2 font-medium">Dispatched on: {new Date(inq.respondedAt).toLocaleString()}</span>
+                        )}
+                      </div>
+                    )}
+
                     <div className="flex items-center justify-between text-[11px] text-slate-400 pt-1.5 border-t border-slate-100 dark:border-slate-800/45">
                       <span>Submitted: {new Date(inq.createdAt).toLocaleDateString()}</span>
-                      <span className="flex items-center gap-1 rounded bg-indigo-50 dark:bg-slate-800 px-2.5 py-0.5 text-indigo-600 dark:text-indigo-400 font-bold">
-                        PENDING ANSWER
-                      </span>
+                      {inq.sellerResponse ? (
+                        <span className="flex items-center gap-1 rounded bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-0.5 text-emerald-700 dark:text-emerald-400 font-bold">
+                          <CheckCircle className="h-3 w-3" />
+                          RESPONDED
+                        </span>
+                      ) : (
+                        <span className="flex items-center gap-1 rounded bg-amber-50 dark:bg-amber-950/30 px-2.5 py-0.5 text-amber-700 dark:text-amber-400 font-bold">
+                          PENDING ANSWER
+                        </span>
+                      )}
                     </div>
+
+                    {!inq.sellerResponse && (
+                      <div className="pt-2">
+                        {replyInquiryId === inq.id ? (
+                          <form
+                            onSubmit={(e) => {
+                              e.preventDefault();
+                              if (!replyText.trim()) return;
+                              respondToInquiry(inq.id, replyText);
+                              setReplyInquiryId(null);
+                              setReplyText('');
+                            }}
+                            className="space-y-2.5 animate-fade-in"
+                          >
+                            <textarea
+                              required
+                              rows={3}
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              placeholder="Type your response proposal, scheduling terms or answers here..."
+                              className="w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3 py-2 text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none dark:text-white resize-none"
+                            />
+                            <div className="flex justify-end gap-2 text-xs font-bold">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setReplyInquiryId(null);
+                                  setReplyText('');
+                                }}
+                                className="px-3.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-850 cursor-pointer transition-colors"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                type="submit"
+                                className="px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer transition-colors"
+                              >
+                                Send Proposal Response
+                              </button>
+                            </div>
+                          </form>
+                        ) : (
+                          <div className="flex justify-end">
+                            <button
+                              onClick={() => {
+                                setReplyInquiryId(inq.id);
+                                setReplyText('');
+                              }}
+                              className="flex items-center gap-1 px-4 py-2 rounded-xl border border-indigo-200 dark:border-indigo-900/50 bg-indigo-50/50 hover:bg-indigo-100 dark:bg-indigo-950/20 dark:hover:bg-indigo-950/40 text-xs font-extrabold text-indigo-700 dark:text-indigo-400 cursor-pointer transition-colors"
+                            >
+                              <MessageSquare className="h-3.5 w-3.5" />
+                              Reply / Send Proposal
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

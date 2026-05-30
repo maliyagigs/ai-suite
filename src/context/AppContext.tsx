@@ -23,12 +23,13 @@ interface AppContextType {
   notifications: Notification[];
   theme: "light" | "dark";
   toggleTheme: () => void;
-  login: (email: string, pass: string) => { success: boolean; message: string };
+  login: (email: string, pass: string) => Promise<{ success: boolean; message: string }>;
+  googleLogin: (credential: string) => Promise<{ success: boolean; message: string }>;
   register: (
     name: string,
     email: string,
     pass: string,
-  ) => { success: boolean; message: string };
+  ) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   toggleCategory: () => void;
   addGig: (
@@ -48,7 +49,7 @@ interface AppContextType {
     gigId: string,
     budget: number,
     message: string,
-  ) => { success: boolean; message: string };
+  ) => Promise<{ success: boolean; message: string }>;
   updatePortfolio: (portfolio: SellerPortfolio) => void;
   submitSellerApplication: (portfolio: SellerPortfolio) => void;
   approveSellerApplication: (userId: string) => void;
@@ -65,12 +66,13 @@ interface AppContextType {
   clearNotifications: () => void;
   clearInquiries: () => void;
   deleteInquiry: (id: string) => void;
+  respondToInquiry: (id: string, message: string) => void;
   rateGig: (gigId: string, rating: number) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-// Initial placeholder sellers with rich Fiverr portfolios
+// Local fallback defaults until fetched
 const ALEX_PORTFOLIO: SellerPortfolio = {
   title: "Full Stack Service Architect & UI Developer",
   description:
@@ -107,6 +109,7 @@ const DEFAULT_USERS: User[] = [
     category: "seller",
     joinedDate: "2026-02-10",
     portfolio: ALEX_PORTFOLIO,
+    sellerStatus: "approved",
   },
   {
     id: "u_buyer",
@@ -145,54 +148,6 @@ const DEFAULT_GIGS: Gig[] = [
     ratingCount: 15,
     createdAt: "2026-05-20",
   },
-  {
-    id: "g2",
-    title: "Visual Identity & Complete Minimalist Branding Kit",
-    description:
-      "Establish a cohesive aesthetic. I will craft a corporate brand portfolio containing vector files, customized design rules, color presets, and social media banners.",
-    price: 150,
-    category: "Design",
-    tags: ["Branding", "Figma", "Logo Design", "Aesthetics"],
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    imageUrl:
-      "https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=800&auto=format&fit=crop",
-    additionalImages: [
-      "https://images.unsplash.com/photo-1509343256512-d77a5cb3791b?q=80&w=600&auto=format&fit=crop",
-      "https://images.unsplash.com/photo-1629752187687-3d3c7ea3a21b?q=80&w=600&auto=format&fit=crop",
-    ],
-    videoUrl: "",
-    pdfUrl: "https://pdfobject.com/pdf/sample.pdf",
-    pdfName: "Branding_Guide_Template.pdf",
-    views: 89,
-    inquiryCount: 1,
-    rating: 4.8,
-    ratingCount: 6,
-    createdAt: "2026-05-22",
-  },
-  {
-    id: "g3",
-    title: "Advanced AI Chatbot & Agent API Integration",
-    description:
-      "Integrate the flagship Gemini Pro conversational API into your live business channel or internal slack workspace to automate client workflows with high fidelity.",
-    price: 490,
-    category: "AI Services",
-    tags: ["Gemini", "Chatbot", "Workflow AI", "Automation"],
-    sellerId: "u_alex",
-    sellerName: "Alex Rivera",
-    imageUrl:
-      "https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=800&auto=format&fit=crop",
-    additionalImages: [
-      "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop",
-    ],
-    videoUrl: "https://www.youtube.com/embed/ysz5S6PUM-U",
-    pdfUrl: "",
-    views: 210,
-    inquiryCount: 5,
-    rating: 4.9,
-    ratingCount: 22,
-    createdAt: "2026-05-25",
-  },
 ];
 
 const DEFAULT_INQUIRIES: Inquiry[] = [
@@ -226,33 +181,10 @@ const DEFAULT_NOTIFICATIONS: Notification[] = [
 ];
 
 export function AppProvider({ children }: { children: ReactNode }) {
-  const [users, setUsers] = useState<User[]>(() => {
-    const stored = localStorage.getItem("melagent_users_v2");
-    return stored ? JSON.parse(stored) : DEFAULT_USERS;
-  });
-
-  const [gigs, setGigs] = useState<Gig[]>(() => {
-    const stored = localStorage.getItem("melagent_gigs_v2");
-    const loaded = stored ? JSON.parse(stored) : DEFAULT_GIGS;
-    return loaded.map((g: any) => ({
-      ...g,
-      rating: typeof g.rating === "number" ? g.rating : 5.0,
-      ratingCount:
-        typeof g.ratingCount === "number"
-          ? g.ratingCount
-          : Math.floor(Math.random() * 8) + 2,
-    }));
-  });
-
-  const [inquiries, setInquiries] = useState<Inquiry[]>(() => {
-    const stored = localStorage.getItem("melagent_inquiries_v2");
-    return stored ? JSON.parse(stored) : DEFAULT_INQUIRIES;
-  });
-
-  const [notifications, setNotifications] = useState<Notification[]>(() => {
-    const stored = localStorage.getItem("melagent_notifications_v2");
-    return stored ? JSON.parse(stored) : DEFAULT_NOTIFICATIONS;
-  });
+  const [users, setUsers] = useState<User[]>(DEFAULT_USERS);
+  const [gigs, setGigs] = useState<Gig[]>(DEFAULT_GIGS);
+  const [inquiries, setInquiries] = useState<Inquiry[]>(DEFAULT_INQUIRIES);
+  const [notifications, setNotifications] = useState<Notification[]>(DEFAULT_NOTIFICATIONS);
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const stored = localStorage.getItem("melagent_current_v2");
@@ -264,26 +196,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return stored === "dark" || stored === "light" ? stored : "light";
   });
 
-  // Sync to local storage
+  // Pull database state from Express on mount
   useEffect(() => {
-    localStorage.setItem("melagent_users_v2", JSON.stringify(users));
-  }, [users]);
+    let active = true;
+    const fetchDatabase = async () => {
+      try {
+        const res = await fetch("/api/db");
+        if (!res.ok) throw new Error("Could not fetch remote server data");
+        const data = await res.json();
+        if (active) {
+          if (data.users && data.users.length > 0) setUsers(data.users);
+          if (data.gigs && data.gigs.length > 0) setGigs(data.gigs);
+          if (data.inquiries && data.inquiries.length > 0) setInquiries(data.inquiries);
+          if (data.notifications && data.notifications.length > 0) setNotifications(data.notifications);
 
-  useEffect(() => {
-    localStorage.setItem("melagent_gigs_v2", JSON.stringify(gigs));
-  }, [gigs]);
+          // Keep local cached user in sync with remote fields
+          const cached = localStorage.getItem("melagent_current_v2");
+          if (cached) {
+            const parsed = JSON.parse(cached) as User;
+            const fresh = (data.users as User[]).find((u) => u.id === parsed.id);
+            if (fresh) {
+              setCurrentUser(fresh);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("Express DB synchronization error:", err);
+      }
+    };
 
-  useEffect(() => {
-    localStorage.setItem("melagent_inquiries_v2", JSON.stringify(inquiries));
-  }, [inquiries]);
+    fetchDatabase();
+    return () => {
+      active = false;
+    };
+  }, []);
 
-  useEffect(() => {
-    localStorage.setItem(
-      "melagent_notifications_v2",
-      JSON.stringify(notifications),
-    );
-  }, [notifications]);
-
+  // Theme support
   useEffect(() => {
     localStorage.setItem("melagent_theme", theme);
     const root = window.document.documentElement;
@@ -294,13 +242,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   }, [theme]);
 
+  // Current session cache support
   useEffect(() => {
     if (currentUser) {
       localStorage.setItem("melagent_current_v2", JSON.stringify(currentUser));
-      // Sync list
-      setUsers((prev) =>
-        prev.map((u) => (u.id === currentUser.id ? currentUser : u)),
-      );
     } else {
       localStorage.removeItem("melagent_current_v2");
     }
@@ -310,107 +255,123 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setTheme((t) => (t === "light" ? "dark" : "light"));
   };
 
-  // Secure authenticate
-  const login = (
+  // REST authenticators
+  const login = async (
     email: string,
     pass: string,
-  ): { success: boolean; message: string } => {
-    const cleanEmail = email.toLowerCase().trim();
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, pass }),
+      });
 
-    // Core requirements check:
-    const isAdminAccount =
-      cleanEmail === "maliyagigs@gmail.com" && pass === "g2jabB80";
-
-    let user = users.find((u) => u.email.toLowerCase() === cleanEmail);
-
-    if (user) {
-      // Correct admin details check
-      if (cleanEmail === "maliyagigs@gmail.com" && pass !== "g2jabB80") {
-        return {
-          success: false,
-          message: "Invalid credentials for admin entry.",
-        };
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setCurrentUser(data.user);
+        setUsers((prev) => {
+          const match = prev.find((u) => u.id === data.user.id);
+          if (match) {
+            return prev.map((u) => (u.id === data.user.id ? data.user : u));
+          } else {
+            return [...prev, data.user];
+          }
+        });
+        return { success: true, message: data.message };
       }
-
-      // If user logs in with maliyagigs name, guarantee they are upgraded to admin securely if needed
-      let updatedUser = { ...user };
-      if (isAdminAccount && user.role !== "admin") {
-        updatedUser.role = "admin";
-      }
-
-      // Default the logged in user to Buyer profile upon accessing as requested
-      if (updatedUser.role !== "admin") {
-        updatedUser.category = "buyer";
-      }
-
-      setCurrentUser(updatedUser);
-      return { success: true, message: "Successfully signed in!" };
+      return { success: false, message: data.message || "Failed signing in." };
+    } catch (err) {
+      return { success: false, message: "Server connection failed." };
     }
-
-    // Auto-register if user doesn't exist but credential entered
-    const name = cleanEmail.split("@")[0];
-    const capitalizedName = name.charAt(0).toUpperCase() + name.slice(1);
-    const newUser: User = {
-      id: `u_${Date.now()}`,
-      email: cleanEmail,
-      name: capitalizedName,
-      role: isAdminAccount ? "admin" : "user",
-      category: "buyer", // Default always redirected to buyer profile
-      joinedDate: new Date().toISOString().split("T")[0],
-    };
-
-    setUsers((prev) => [...prev, newUser]);
-    setCurrentUser(newUser);
-    return { success: true, message: "New profile registered." };
   };
 
-  const register = (
+  const register = async (
     name: string,
     email: string,
     pass: string,
-  ): { success: boolean; message: string } => {
-    const cleanEmail = email.toLowerCase().trim();
-    const isAdminAccount =
-      cleanEmail === "maliyagigs@gmail.com" && pass === "g2jabB80";
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, email, pass }),
+      });
 
-    const existing = users.find((u) => u.email.toLowerCase() === cleanEmail);
-    if (existing) {
-      // Sign in instead
-      return login(email, pass);
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setCurrentUser(data.user);
+        setUsers((prev) => {
+          const match = prev.find((u) => u.id === data.user.id);
+          if (match) {
+            return prev.map((u) => (u.id === data.user.id ? data.user : u));
+          } else {
+            return [...prev, data.user];
+          }
+        });
+        return { success: true, message: data.message };
+      }
+      return { success: false, message: data.message || "Failed registration." };
+    } catch (err) {
+      return { success: false, message: "Server connection failed." };
     }
+  };
 
-    const newUser: User = {
-      id: `u_${Date.now()}`,
-      email: cleanEmail,
-      name: name.trim() || cleanEmail.split("@")[0],
-      role: isAdminAccount ? "admin" : "user",
-      category: "buyer", // default always buyer first
-      joinedDate: new Date().toISOString().split("T")[0],
-    };
+  const googleLogin = async (credential: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await fetch("/api/auth/google", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ credential }),
+      });
 
-    setUsers((prev) => [...prev, newUser]);
-    setCurrentUser(newUser);
-    return {
-      success: true,
-      message: "Account successfully registered and active.",
-    };
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setCurrentUser(data.user);
+        setUsers((prev) => {
+          const match = prev.find((u) => u.id === data.user.id);
+          if (match) {
+            return prev.map((u) => (u.id === data.user.id ? data.user : u));
+          } else {
+            return [...prev, data.user];
+          }
+        });
+        return { success: true, message: data.message };
+      }
+      return { success: false, message: data.message || "Failed Google sign in." };
+    } catch (err) {
+      return { success: false, message: "Server connection failed." };
+    }
   };
 
   const logout = () => {
     setCurrentUser(null);
   };
 
-  const toggleCategory = () => {
+  // Toggle user view mode persistently
+  const toggleCategory = async () => {
     if (!currentUser) return;
-    const nextCategory: UserCategory =
-      currentUser.category === "buyer" ? "seller" : "buyer";
-    setCurrentUser({
-      ...currentUser,
-      category: nextCategory,
-    });
+    const nextCategory: UserCategory = currentUser.category === "buyer" ? "seller" : "buyer";
+    
+    // Update local state first
+    const updated = { ...currentUser, category: nextCategory };
+    setCurrentUser(updated);
+    setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updated : u)));
+
+    // Send async write update to the Express database
+    try {
+      await fetch("/api/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, portfolio: currentUser.portfolio, sellerStatus: currentUser.sellerStatus, category: nextCategory }),
+      });
+    } catch (err) {
+      console.error("Failed to persist view toggle:", err);
+    }
   };
 
-  const addGig = (
+  // Create a new Gig listing
+  const addGig = async (
     gigData: Omit<
       Gig,
       | "id"
@@ -424,26 +385,38 @@ export function AppProvider({ children }: { children: ReactNode }) {
     >,
   ) => {
     if (!currentUser) return;
-    const newGig: Gig = {
+    
+    // Create payload
+    const payload = {
       ...gigData,
-      id: `g_${Date.now()}`,
       sellerId: currentUser.id,
       sellerName: currentUser.name,
-      createdAt: new Date().toISOString().split("T")[0],
-      views: 0,
-      inquiryCount: 0,
-      rating: 5.0,
-      ratingCount: 1,
     };
 
-    setGigs((prev) => [newGig, ...prev]);
+    try {
+      const res = await fetch("/api/gigs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.gig) {
+          setGigs((prev) => [data.gig, ...prev]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to transmit gig listing:", err);
+    }
   };
 
-  const submitInquiry = (
+  // Submit modern service inquiry
+  const submitInquiry = async (
     gigId: string,
     budget: number,
     message: string,
-  ): { success: boolean; message: string } => {
+  ): Promise<{ success: boolean; message: string }> => {
     if (!currentUser) {
       return {
         success: false,
@@ -451,72 +424,77 @@ export function AppProvider({ children }: { children: ReactNode }) {
       };
     }
 
-    const gig = gigs.find((g) => g.id === gigId);
-    if (!gig) {
-      return {
-        success: false,
-        message: "Active service listing no longer exists.",
-      };
-    }
-
-    if (currentUser.id === gig.sellerId) {
-      return {
-        success: false,
-        message: "You cannot submit an inquiry on your own service listing.",
-      };
-    }
-
-    const newInq: Inquiry = {
-      id: `inq_${Date.now()}`,
-      gigId: gig.id,
-      gigTitle: gig.title,
+    const payload = {
+      gigId,
+      proposedBudget: budget,
+      message,
       buyerId: currentUser.id,
       buyerName: currentUser.name,
       buyerEmail: currentUser.email,
-      sellerId: gig.sellerId,
-      sellerName: gig.sellerName,
-      proposedBudget: budget || gig.price,
-      message:
-        message.trim() || "I am interested in your service! Let’s coordinate.",
-      status: "pending",
-      createdAt: new Date().toISOString(),
     };
 
-    setInquiries((prev) => [newInq, ...prev]);
+    try {
+      const res = await fetch("/api/inquiries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    // Update Gig Stats
-    setGigs((prev) =>
-      prev.map((g) =>
-        g.id === gigId ? { ...g, inquiryCount: g.inquiryCount + 1 } : g,
-      ),
-    );
-
-    return {
-      success: true,
-      message: "Inquiry successfully transmitted to the seller!",
-    };
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setInquiries((prev) => [data.inquiry, ...prev]);
+        // Adjust local gig inquiry count immediately
+        setGigs((prev) =>
+          prev.map((g) =>
+            g.id === gigId ? { ...g, inquiryCount: g.inquiryCount + 1 } : g,
+          ),
+        );
+        return { success: true, message: "Inquiry successfully transmitted!" };
+      }
+      return { success: false, message: data.error || "Failed sending inquiry." };
+    } catch (err) {
+      return { success: false, message: "Network connection error." };
+    }
   };
 
-  const updatePortfolio = (portfolio: SellerPortfolio) => {
+  // Profile management
+  const updatePortfolio = async (portfolio: SellerPortfolio) => {
     if (!currentUser) return;
-    const updatedUser = {
-      ...currentUser,
-      portfolio,
-    };
-    setCurrentUser(updatedUser);
+    const updated = { ...currentUser, portfolio };
+    
+    setCurrentUser(updated);
+    setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updated : u)));
+
+    try {
+      await fetch("/api/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, portfolio }),
+      });
+    } catch (err) {
+      console.error("Error updating portfolio:", err);
+    }
   };
 
-  const submitSellerApplication = (portfolio: SellerPortfolio) => {
+  const submitSellerApplication = async (portfolio: SellerPortfolio) => {
     if (!currentUser) return;
-    const updatedUser = {
-      ...currentUser,
-      portfolio,
-      sellerStatus: "pending" as const,
-    };
-    setCurrentUser(updatedUser);
+    const updated = { ...currentUser, portfolio, sellerStatus: "pending" as const };
+    
+    setCurrentUser(updated);
+    setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updated : u)));
+
+    try {
+      await fetch("/api/portfolio", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, portfolio, sellerStatus: "pending" }),
+      });
+    } catch (err) {
+      console.error("Error submitting seller application:", err);
+    }
   };
 
-  const approveSellerApplication = (userId: string) => {
+  const approveSellerApplication = async (userId: string) => {
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === userId) {
@@ -526,15 +504,20 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }),
     );
 
-    // Also update currentUser if it's the currently logged-in user getting approved.
     if (currentUser?.id === userId) {
       setCurrentUser((prev) =>
         prev ? { ...prev, sellerStatus: "approved", category: "seller" } : null,
       );
     }
+
+    try {
+      await fetch(`/api/seller-application/${userId}/approve`, { method: "POST" });
+    } catch (err) {
+      console.error("Error approving seller:", err);
+    }
   };
 
-  const rejectSellerApplication = (userId: string) => {
+  const rejectSellerApplication = async (userId: string) => {
     setUsers((prev) =>
       prev.map((u) => {
         if (u.id === userId) {
@@ -544,78 +527,161 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }),
     );
 
-    // Also update currentUser if it's the currently logged-in user getting rejected.
     if (currentUser?.id === userId) {
       setCurrentUser((prev) =>
         prev ? { ...prev, sellerStatus: "rejected" } : null,
       );
     }
+
+    try {
+      await fetch(`/api/seller-application/${userId}/reject`, { method: "POST" });
+    } catch (err) {
+      console.error("Error rejecting seller:", err);
+    }
   };
 
-  const incrementViews = (gigId: string) => {
+  const incrementViews = async (gigId: string) => {
     setGigs((prev) =>
       prev.map((g) => (g.id === gigId ? { ...g, views: g.views + 1 } : g)),
     );
+
+    try {
+      await fetch(`/api/gigs/${gigId}/view`, { method: "POST" });
+    } catch (err) {
+      console.error("Error incrementing views:", err);
+    }
   };
 
-  const deleteGig = (gigId: string) => {
+  const deleteGig = async (gigId: string) => {
     setGigs((prev) => prev.filter((g) => g.id !== gigId));
+
+    try {
+      await fetch(`/api/gigs/${gigId}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Error deleting gig:", err);
+    }
   };
 
-  const deleteUser = (userId: string) => {
+  const deleteUser = async (userId: string) => {
     if (currentUser?.id === userId) return;
     setUsers((prev) => prev.filter((u) => u.id !== userId));
     setGigs((prev) => prev.filter((g) => g.sellerId !== userId));
+
+    try {
+      await fetch(`/api/users/${userId}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Error deleting user:", err);
+    }
   };
 
-  const sendNotification = (
+  const sendNotification = async (
     title: string,
     message: string,
     targetUserId?: string,
   ) => {
-    const newNotif: Notification = {
-      id: `n_${Date.now()}`,
-      title,
-      message,
-      senderName: currentUser?.name || "Admin",
-      targetUserId,
-      isRead: false,
-      createdAt: new Date().toISOString(),
-    };
-    setNotifications((prev) => [newNotif, ...prev]);
+    try {
+      const res = await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, message, senderName: currentUser?.name || "Admin", targetUserId }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.notification) {
+          setNotifications((prev) => [data.notification, ...prev]);
+        }
+      }
+    } catch (err) {
+      console.error("Error sending notification:", err);
+    }
   };
 
-  const markNotificationAsRead = (id: string) => {
+  const markNotificationAsRead = async (id: string) => {
     setNotifications((prev) =>
       prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
     );
+
+    try {
+      await fetch(`/api/notifications/${id}/read`, { method: "POST" });
+    } catch (err) {
+      console.error("Error marking read:", err);
+    }
   };
 
-  const clearNotifications = () => {
+  const clearNotifications = async () => {
     setNotifications([]);
+
+    try {
+      await fetch("/api/notifications/clear", { method: "DELETE" });
+    } catch (err) {
+      console.error("Error clearing notifications:", err);
+    }
   };
 
-  const clearInquiries = () => {
+  const clearInquiries = async () => {
     setInquiries([]);
+
+    try {
+      await fetch("/api/inquiries/clear", { method: "DELETE" });
+    } catch (err) {
+      console.error("Error clearing inquiries:", err);
+    }
   };
 
-  const deleteInquiry = (id: string) => {
+  const deleteInquiry = async (id: string) => {
     setInquiries((prev) => prev.filter((inq) => inq.id !== id));
+
+    try {
+      await fetch(`/api/inquiries/${id}`, { method: "DELETE" });
+    } catch (err) {
+      console.error("Error deleting inquiry:", err);
+    }
   };
 
-  const rateGig = (gigId: string, userRating: number) => {
+  const respondToInquiry = async (id: string, message: string) => {
+    try {
+      const res = await fetch(`/api/inquiries/${id}/respond`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ responseText: message }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          setInquiries((prev) =>
+            prev.map((inq) => (inq.id === id ? data.inquiry : inq)),
+          );
+          setNotifications((prev) => [data.notification, ...prev]);
+        }
+      }
+    } catch (err) {
+      console.error("Error responding to inquiry:", err);
+    }
+  };
+
+  const rateGig = async (gigId: string, userRating: number) => {
     setGigs((prev) =>
       prev.map((g) => {
         if (g.id === gigId) {
           const newCount = g.ratingCount + 1;
-          const newRating = Number(
-            ((g.rating * g.ratingCount + userRating) / newCount).toFixed(1),
-          );
+          const newRating = Number(((g.rating * g.ratingCount + userRating) / newCount).toFixed(1));
           return { ...g, rating: newRating, ratingCount: newCount };
         }
         return g;
       }),
     );
+
+    try {
+      await fetch(`/api/gigs/${gigId}/rate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating: userRating }),
+      });
+    } catch (err) {
+      console.error("Error rating gig:", err);
+    }
   };
 
   return (
@@ -629,6 +695,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         theme,
         toggleTheme,
         login,
+        googleLogin,
         register,
         logout,
         toggleCategory,
@@ -646,6 +713,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         clearNotifications,
         clearInquiries,
         deleteInquiry,
+        respondToInquiry,
         rateGig,
       }}
     >

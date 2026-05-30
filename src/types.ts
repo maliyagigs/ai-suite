@@ -67,5 +67,7 @@ export interface Inquiry {
   proposedBudget: number;
   message: string;
   status: 'pending' | 'responded' | 'archived';
+  sellerResponse?: string;
+  respondedAt?: string;
   createdAt: string;
 }

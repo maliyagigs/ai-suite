@@ -42,7 +42,7 @@ const AnimeUserProfileIcon = ({ name }: { name: string }) => {
 };
 
 export function BuyerDashboard() {
-  const { gigs, users, inquiries, submitInquiry, incrementViews, clearInquiries, deleteInquiry } = useApp();
+  const { currentUser, gigs, users, inquiries, submitInquiry, incrementViews, clearInquiries, deleteInquiry } = useApp();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -102,23 +102,24 @@ export function BuyerDashboard() {
   });
 
   // Handle inquiry dispatch
-  const handleSendInquiry = (e: React.FormEvent, gigId: string) => {
+  const handleSendInquiry = async (e: React.FormEvent, gigId: string) => {
     e.preventDefault();
     setIsSubmitting(true);
     setInquiryResult(null);
 
-    // Simulate authentic network latency
-    setTimeout(() => {
-      const res = submitInquiry(gigId, proposedBudget || (activeGig?.price ?? 100), inquiryMsg);
+    try {
+      const res = await submitInquiry(gigId, proposedBudget || (activeGig?.price ?? 100), inquiryMsg);
       setInquiryResult(res);
-      setIsSubmitting(false);
-
       if (res.success) {
         setInquiryMsg('');
         // Increment views counts for seo metrics
         incrementViews(gigId);
       }
-    }, 1200);
+    } catch (err) {
+      setInquiryResult({ success: false, message: "Network connection failed" });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   // Find seller object in general platform database for disclosure
@@ -312,12 +313,12 @@ export function BuyerDashboard() {
       </div>
 
       {/* MY SENT INQUIRIES WORK HISTORY LIST */}
-      {inquiries.length > 0 && (
+      {inquiries.filter((inq) => inq.buyerId === currentUser?.id).length > 0 && (
         <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-205 dark:border-slate-800">
           <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
             <h3 className="font-display text-lg font-bold text-slate-850 dark:text-white flex items-center gap-2">
               <ShoppingBag className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              My Sent Service Inquiries history ({inquiries.length})
+              My Sent Service Inquiries history ({inquiries.filter((inq) => inq.buyerId === currentUser?.id).length})
             </h3>
             <button
               onClick={clearInquiries}
@@ -329,52 +330,71 @@ export function BuyerDashboard() {
           </div>
 
           <div className="space-y-4">
-            {inquiries.map((inq) => (
-              <div
-                key={inq.id}
-                className="p-5 rounded-2xl border border-slate-150 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-3"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-505 dark:text-indigo-400">
-                      Service Code: {inq.gigTitle}
-                    </span>
-                    <h4 className="font-bold text-sm text-slate-800 dark:text-white mt-1">
-                      Target Seller Agent: {inq.sellerName}
-                    </h4>
-                  </div>
-
-                  <div className="flex items-center gap-4">
-                    <div className="text-right">
-                      <span className="text-[10px] text-slate-400 block font-bold">Proposed Budget</span>
-                      <span className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
-                        ${inq.proposedBudget}
+            {inquiries
+              .filter((inq) => inq.buyerId === currentUser?.id)
+              .map((inq) => (
+                <div
+                  key={inq.id}
+                  className="p-5 rounded-2xl border border-slate-150 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-3"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <span className="text-[10px] uppercase tracking-wider font-bold text-indigo-505 dark:text-indigo-400">
+                        Service Code: {inq.gigTitle}
                       </span>
+                      <h4 className="font-bold text-sm text-slate-800 dark:text-white mt-1">
+                        Target Seller Agent: {inq.sellerName}
+                      </h4>
                     </div>
 
-                    <button
-                      onClick={() => deleteInquiry(inq.id)}
-                      className="p-1.5 text-slate-400 hover:text-rose-605 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition cursor-pointer shrink-0"
-                      title="Delete inquiry record"
-                    >
-                      <X className="h-4.5 w-4.5" />
-                    </button>
+                    <div className="flex items-center gap-4">
+                      <div className="text-right">
+                        <span className="text-[10px] text-slate-400 block font-bold">Proposed Budget</span>
+                        <span className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
+                          ${inq.proposedBudget}
+                        </span>
+                      </div>
+
+                      <button
+                        onClick={() => deleteInquiry(inq.id)}
+                        className="p-1.5 text-slate-400 hover:text-rose-605 dark:hover:text-rose-400 hover:bg-slate-100 dark:hover:bg-slate-800/80 rounded-xl transition cursor-pointer shrink-0"
+                        title="Delete inquiry record"
+                      >
+                        <X className="h-4.5 w-4.5" />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-xs text-slate-605 dark:text-slate-350">
+                    "{inq.message}"
+                  </div>
+
+                  {inq.sellerResponse && (
+                    <div className="p-3.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/25 border border-indigo-100/50 dark:border-indigo-900/55 text-xs animate-fade-in space-y-1">
+                      <span className="font-extrabold text-indigo-700 dark:text-indigo-400 block">Response proposal from {inq.sellerName}:</span>
+                      <p className="text-slate-700 dark:text-slate-300 italic">"{inq.sellerResponse}"</p>
+                      {inq.respondedAt && (
+                        <span className="block text-[9px] text-slate-405 dark:text-slate-500 pt-1 font-medium">Received: {new Date(inq.respondedAt).toLocaleString()}</span>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between text-[11px] text-slate-405 dark:text-slate-500 pt-1.5 border-t border-slate-100 dark:border-slate-800/40">
+                    <span>Inquiry Sent: {new Date(inq.createdAt).toLocaleDateString()}</span>
+                    {inq.sellerResponse ? (
+                      <span className="inline-flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] text-emerald-600 dark:text-emerald-400 px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950/30">
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                        Response proposal received
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded bg-indigo-50/70 dark:bg-slate-800">
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                        Transmitted / Pending Seller
+                      </span>
+                    )}
                   </div>
                 </div>
-
-                <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-100 dark:border-slate-800 text-xs text-slate-605 dark:text-slate-350">
-                  "{inq.message}"
-                </div>
-
-                <div className="flex items-center justify-between text-[11px] text-slate-405 dark:text-slate-500 pt-1.5 border-t border-slate-100 dark:border-slate-800/40">
-                  <span>Inquiry Sent: {new Date(inq.createdAt).toLocaleDateString()}</span>
-                  <span className="inline-flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded bg-indigo-50/70 dark:bg-slate-800">
-                    <ArrowUpRight className="h-3.5 w-3.5" />
-                    Transmitted
-                  </span>
-                </div>
-              </div>
-            ))}
+              ))}
           </div>
         </section>
       )}
