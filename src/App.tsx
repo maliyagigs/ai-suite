@@ -5,13 +5,18 @@ import { AdminDashboard } from "./components/AdminDashboard";
 import { SellerDashboard } from "./components/SellerDashboard";
 import { BuyerDashboard } from "./components/BuyerDashboard";
 import { SellerApplicationForm } from "./components/SellerApplicationForm";
+import { ProfilePage } from "./components/ProfilePage";
 import { Sparkles } from "lucide-react";
 import { Footer } from "./components/Footer";
 
 function DashboardSwitch() {
-  const { currentUser } = useApp();
+  const { currentUser, activeView } = useApp();
 
   if (!currentUser) return null;
+
+  if (activeView === "profile") {
+    return <ProfilePage />;
+  }
 
   if (currentUser.role === "admin") {
     return <AdminDashboard />;

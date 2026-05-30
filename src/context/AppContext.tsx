@@ -13,6 +13,7 @@ import {
   UserCategory,
   UserRole,
   Notification,
+  Order,
 } from "../types";
 
 interface AppContextType {
@@ -20,6 +21,7 @@ interface AppContextType {
   users: User[];
   gigs: Gig[];
   inquiries: Inquiry[];
+  orders: Order[];
   notifications: Notification[];
   theme: "light" | "dark";
   toggleTheme: () => void;
@@ -50,6 +52,17 @@ interface AppContextType {
     budget: number,
     message: string,
   ) => Promise<{ success: boolean; message: string }>;
+  submitOrder: (
+    gigId: string,
+    price: number,
+    sellerId: string,
+    sellerName: string,
+    gigTitle: string,
+  ) => Promise<{ success: boolean; message: string }>;
+  acceptOrder: (orderId: string) => Promise<void>;
+  deliverOrder: (orderId: string) => Promise<void>;
+  completeAndRateOrder: (orderId: string, rating: number, comment?: string) => Promise<void>;
+  disputeOrder: (orderId: string, reason: string) => Promise<void>;
   updatePortfolio: (portfolio: SellerPortfolio) => void;
   submitSellerApplication: (portfolio: SellerPortfolio) => void;
   approveSellerApplication: (userId: string) => void;
@@ -68,6 +81,9 @@ interface AppContextType {
   deleteInquiry: (id: string) => void;
   respondToInquiry: (id: string, message: string) => void;
   rateGig: (gigId: string, rating: number) => void;
+  activeView: "dashboard" | "profile";
+  setActiveView: (view: "dashboard" | "profile") => void;
+  updateUserProfile: (fields: Partial<User>) => Promise<{ success: boolean; message: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -184,6 +200,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>(DEFAULT_USERS);
   const [gigs, setGigs] = useState<Gig[]>(DEFAULT_GIGS);
   const [inquiries, setInquiries] = useState<Inquiry[]>(DEFAULT_INQUIRIES);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>(DEFAULT_NOTIFICATIONS);
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
@@ -195,6 +212,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const stored = localStorage.getItem("melagent_theme");
     return stored === "dark" || stored === "light" ? stored : "light";
   });
+
+  const [activeView, setActiveView] = useState<"dashboard" | "profile">("dashboard");
 
   // Pull database state from Express on mount
   useEffect(() => {
@@ -208,6 +227,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (data.users && data.users.length > 0) setUsers(data.users);
           if (data.gigs && data.gigs.length > 0) setGigs(data.gigs);
           if (data.inquiries && data.inquiries.length > 0) setInquiries(data.inquiries);
+          if (data.orders && data.orders.length > 0) setOrders(data.orders);
           if (data.notifications && data.notifications.length > 0) setNotifications(data.notifications);
 
           // Keep local cached user in sync with remote fields
@@ -684,6 +704,142 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const submitOrder = async (
+    gigId: string,
+    price: number,
+    sellerId: string,
+    sellerName: string,
+    gigTitle: string,
+  ): Promise<{ success: boolean; message: string }> => {
+    if (!currentUser) {
+      return { success: false, message: "Please sign in to place an order." };
+    }
+
+    const payload = {
+      gigId,
+      price,
+      buyerId: currentUser.id,
+      buyerName: currentUser.name,
+      sellerId,
+      sellerName,
+      gigTitle,
+    };
+
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setOrders((prev) => [data.order, ...prev]);
+        return { success: true, message: "Order placed successfully! Waiting for seller confirmation." };
+      }
+      return { success: false, message: data.error || "Failed to place order." };
+    } catch (err) {
+      return { success: false, message: "Network connection error." };
+    }
+  };
+
+  const acceptOrder = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/accept`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.order) {
+          setOrders((prev) => prev.map((o) => (o.id === orderId ? data.order : o)));
+        }
+      }
+    } catch (err) {
+      console.error("Error accepting order:", err);
+    }
+  };
+
+  const deliverOrder = async (orderId: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/deliver`, { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.order) {
+          setOrders((prev) => prev.map((o) => (o.id === orderId ? data.order : o)));
+        }
+      }
+    } catch (err) {
+      console.error("Error delivering order:", err);
+    }
+  };
+
+  const completeAndRateOrder = async (orderId: string, rating: number, comment?: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/complete`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ rating, ratingComment: comment }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.order) {
+          setOrders((prev) => prev.map((o) => (o.id === orderId ? data.order : o)));
+          
+          // Re-fetch database to get fresh ratings/gigs in state
+          const freshRes = await fetch("/api/db");
+          if (freshRes.ok) {
+            const freshData = await freshRes.json();
+            if (freshData.gigs) setGigs(freshData.gigs);
+            if (freshData.notifications) setNotifications(freshData.notifications);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error completing order:", err);
+    }
+  };
+
+  const disputeOrder = async (orderId: string, reason: string) => {
+    try {
+      const res = await fetch(`/api/orders/${orderId}/dispute`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ disputeReason: reason }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && data.order) {
+          setOrders((prev) => prev.map((o) => (o.id === orderId ? data.order : o)));
+        }
+      }
+    } catch (err) {
+      console.error("Error disputing order:", err);
+    }
+  };
+
+  const updateUserProfile = async (
+    fields: Partial<User>
+  ): Promise<{ success: boolean; message: string }> => {
+    if (!currentUser) return { success: false, message: "No active user logged in" };
+    try {
+      const res = await fetch("/api/user/update", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId: currentUser.id, ...fields }),
+      });
+      if (!res.ok) throw new Error("Server update failed");
+      const data = await res.json();
+      if (data.success && data.user) {
+        setCurrentUser(data.user);
+        localStorage.setItem("melagent_current_v2", JSON.stringify(data.user));
+        setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? data.user : u)));
+        return { success: true, message: "Profile successfully updated!" };
+      }
+      return { success: false, message: data.error || "Update unsuccessful" };
+    } catch (err) {
+      console.error(err);
+      return { success: false, message: "Network error updating details" };
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -691,6 +847,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         users,
         gigs,
         inquiries,
+        orders,
         notifications,
         theme,
         toggleTheme,
@@ -701,6 +858,11 @@ export function AppProvider({ children }: { children: ReactNode }) {
         toggleCategory,
         addGig,
         submitInquiry,
+        submitOrder,
+        acceptOrder,
+        deliverOrder,
+        completeAndRateOrder,
+        disputeOrder,
         updatePortfolio,
         submitSellerApplication,
         approveSellerApplication,
@@ -715,6 +877,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         deleteInquiry,
         respondToInquiry,
         rateGig,
+        activeView,
+        setActiveView,
+        updateUserProfile,
       }}
     >
       {children}

@@ -37,6 +37,9 @@ interface User {
   joinedDate: string;
   portfolio?: SellerPortfolio;
   sellerStatus?: "none" | "pending" | "approved" | "rejected";
+  bio?: string;
+  avatarUrl?: string;
+  customThemeColor?: string;
 }
 
 interface Gig {
@@ -88,10 +91,29 @@ interface Inquiry {
   createdAt: string;
 }
 
+interface Order {
+  id: string;
+  gigId: string;
+  gigTitle: string;
+  price: number;
+  buyerId: string;
+  buyerName: string;
+  sellerId: string;
+  sellerName: string;
+  status: "pending_seller" | "in_progress" | "delivered" | "completed" | "disputed";
+  disputeReason?: string;
+  rating?: number;
+  ratingComment?: string;
+  createdAt: string;
+  deliveredAt?: string;
+  completedAt?: string;
+}
+
 interface DatabaseSchema {
   users: User[];
   gigs: Gig[];
   inquiries: Inquiry[];
+  orders: Order[];
   notifications: Notification[];
 }
 
@@ -250,12 +272,48 @@ const DEFAULT_NOTIFICATIONS: Notification[] = [
   },
 ];
 
+const DEFAULT_ORDERS: Order[] = [
+  {
+    id: "ord_1",
+    gigId: "g1",
+    gigTitle: "Custom Full Stack React Platform with Elegant Themes",
+    price: 350,
+    buyerId: "u_buyer",
+    buyerName: "David Chen",
+    sellerId: "u_alex",
+    sellerName: "Alex Rivera",
+    status: "in_progress",
+    createdAt: "2026-05-27T10:00:00Z"
+  },
+  {
+    id: "ord_2",
+    gigId: "g2",
+    gigTitle: "Visual Identity & Complete Minimalist Branding Kit",
+    price: 150,
+    buyerId: "u_buyer",
+    buyerName: "David Chen",
+    sellerId: "u_alex",
+    sellerName: "Alex Rivera",
+    status: "completed",
+    rating: 5,
+    ratingComment: "Alex did an outstanding job crafting our logo and vector style guides. Highly recommend standard of work!",
+    createdAt: "2026-05-24T08:30:00Z",
+    deliveredAt: "2026-05-25T11:00:00Z",
+    completedAt: "2026-05-25T14:20:00Z"
+  }
+];
+
 // Helper to load/save JSON DB
 function loadDB(): DatabaseSchema {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, "utf-8");
-      return JSON.parse(raw);
+      const db = JSON.parse(raw);
+      if (!db.orders) {
+        db.orders = DEFAULT_ORDERS;
+        saveDB(db);
+      }
+      return db;
     }
   } catch (err) {
     console.error("Error reading database file, using defaults", err);
@@ -266,6 +324,7 @@ function loadDB(): DatabaseSchema {
     users: DEFAULT_USERS,
     gigs: DEFAULT_GIGS,
     inquiries: DEFAULT_INQUIRIES,
+    orders: DEFAULT_ORDERS,
     notifications: DEFAULT_NOTIFICATIONS,
   };
   saveDB(initial);
@@ -563,6 +622,33 @@ app.post("/api/portfolio", (req, res) => {
   res.json({ success: true, user: updatedUser });
 });
 
+// POST /api/user/update - General endpoint for profile details, customizations, and settings
+app.post("/api/user/update", (req, res) => {
+  const { userId, name, email, bio, avatarUrl, customThemeColor, category } = req.body;
+  if (!userId) {
+    return res.status(400).json({ error: "Missing userId" });
+  }
+
+  const db = loadDB();
+  db.users = db.users.map((u) => {
+    if (u.id === userId) {
+      const updated = { ...u };
+      if (name !== undefined) updated.name = name;
+      if (email !== undefined) updated.email = email;
+      if (bio !== undefined) updated.bio = bio;
+      if (avatarUrl !== undefined) updated.avatarUrl = avatarUrl;
+      if (customThemeColor !== undefined) updated.customThemeColor = customThemeColor;
+      if (category !== undefined) updated.category = category;
+      return updated;
+    }
+    return u;
+  });
+  saveDB(db);
+
+  const updatedUser = db.users.find((u) => u.id === userId);
+  res.json({ success: true, user: updatedUser });
+});
+
 // POST /api/seller-application/:userId/approve
 app.post("/api/seller-application/:userId/approve", (req, res) => {
   const { userId } = req.params;
@@ -736,6 +822,200 @@ app.delete("/api/notifications/clear", (req, res) => {
   db.notifications = [];
   saveDB(db);
   res.json({ success: true });
+});
+
+// GET /api/orders
+app.get("/api/orders", (req, res) => {
+  const db = loadDB();
+  res.json(db.orders || []);
+});
+
+// POST /api/orders - Create a new direct order
+app.post("/api/orders", (req, res) => {
+  const { gigId, price, buyerId, buyerName, sellerId, sellerName, gigTitle } = req.body;
+  if (!gigId || !buyerId || !sellerId) {
+    return res.status(400).json({ error: "Missing required order parameters" });
+  }
+
+  const db = loadDB();
+  const newOrder: Order = {
+    id: `ord_${Date.now()}`,
+    gigId,
+    gigTitle: gigTitle || "Service Commission",
+    price: Number(price),
+    buyerId,
+    buyerName,
+    sellerId,
+    sellerName,
+    status: "pending_seller",
+    createdAt: new Date().toISOString()
+  };
+
+  db.orders = db.orders || [];
+  db.orders.unshift(newOrder);
+
+  // Send notification to seller
+  const notif: Notification = {
+    id: `n_ord_${Date.now()}`,
+    title: `New Order: ${newOrder.gigTitle}`,
+    message: `Buyer ${buyerName} has placed an order for $${newOrder.price}! Please accept to begin working.`,
+    senderName: "System Billing",
+    targetUserId: sellerId,
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+  db.notifications.unshift(notif);
+
+  saveDB(db);
+  res.json({ success: true, order: newOrder });
+});
+
+// POST /api/orders/:id/accept - Seller accepts order
+app.post("/api/orders/:id/accept", (req, res) => {
+  const { id } = req.params;
+  const db = loadDB();
+  let found: Order | undefined;
+
+  db.orders = (db.orders || []).map((o) => {
+    if (o.id === id) {
+      found = { ...o, status: "in_progress" };
+      return found;
+    }
+    return o;
+  });
+
+  if (!found) return res.status(404).json({ error: "Order not found" });
+
+  // Notify buyer
+  const notif: Notification = {
+    id: `n_acc_${Date.now()}`,
+    title: `Order Accepted: ${found.gigTitle}`,
+    message: `Seller ${found.sellerName} has accepted your order and started working!`,
+    senderName: "System",
+    targetUserId: found.buyerId,
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+  db.notifications.unshift(notif);
+
+  saveDB(db);
+  res.json({ success: true, order: found });
+});
+
+// POST /api/orders/:id/deliver - Seller confirms delivery
+app.post("/api/orders/:id/deliver", (req, res) => {
+  const { id } = req.params;
+  const db = loadDB();
+  let found: Order | undefined;
+
+  db.orders = (db.orders || []).map((o) => {
+    if (o.id === id) {
+      found = { ...o, status: "delivered", deliveredAt: new Date().toISOString() };
+      return found;
+    }
+    return o;
+  });
+
+  if (!found) return res.status(404).json({ error: "Order not found" });
+
+  // Notify buyer
+  const notif: Notification = {
+    id: `n_del_${Date.now()}`,
+    title: `Order Delivered: ${found.gigTitle}`,
+    message: `Seller ${found.sellerName} marked your order as delivered. Please review, rate, and complete the order.`,
+    senderName: "System",
+    targetUserId: found.buyerId,
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+  db.notifications.unshift(notif);
+
+  saveDB(db);
+  res.json({ success: true, order: found });
+});
+
+// POST /api/orders/:id/complete - Buyer completes and rates
+app.post("/api/orders/:id/complete", (req, res) => {
+  const { id } = req.params;
+  const { rating, ratingComment } = req.body;
+  const db = loadDB();
+  let found: Order | undefined;
+
+  db.orders = (db.orders || []).map((o) => {
+    if (o.id === id) {
+      found = {
+        ...o,
+        status: "completed",
+        rating: typeof rating === "number" ? rating : undefined,
+        ratingComment: ratingComment || undefined,
+        completedAt: new Date().toISOString()
+      };
+      return found;
+    }
+    return o;
+  });
+
+  if (!found) return res.status(404).json({ error: "Order not found" });
+
+  // Update gig's rating if applicable
+  if (rating) {
+    db.gigs = db.gigs.map((g) => {
+      if (g.id === found?.gigId) {
+        const newCount = g.ratingCount + 1;
+        const newRating = Number(((g.rating * g.ratingCount + rating) / newCount).toFixed(1));
+        return { ...g, rating: newRating, ratingCount: newCount };
+      }
+      return g;
+    });
+  }
+
+  // Notify seller
+  const notif: Notification = {
+    id: `n_com_${Date.now()}`,
+    title: `Order Completed!`,
+    message: `Buyer ${found.buyerName} has accepted & completed order "${found.gigTitle}". Rating: ${rating || "None"} stars.`,
+    senderName: "System Billing",
+    targetUserId: found.sellerId,
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+  db.notifications.unshift(notif);
+
+  saveDB(db);
+  res.json({ success: true, order: found });
+});
+
+// POST /api/orders/:id/dispute - Buyer files complaint
+app.post("/api/orders/:id/dispute", (req, res) => {
+  const { id } = req.params;
+  const { disputeReason } = req.body;
+  const db = loadDB();
+  let found: Order | undefined;
+
+  db.orders = (db.orders || []).map((o) => {
+    if (o.id === id) {
+      found = { ...o, status: "disputed", disputeReason: disputeReason || "No custom reason provided" };
+      return found;
+    }
+    return o;
+  });
+
+  if (!found) return res.status(404).json({ error: "Order not found" });
+
+  // Notify seller
+  const notif: Notification = {
+    id: `n_disp_${Date.now()}`,
+    title: `Order Disputed!`,
+    message: `Buyer ${found.buyerName} reported an issue with order "${found.gigTitle}". Reason: ${disputeReason}`,
+    senderName: "Dispute Center",
+    targetUserId: found.sellerId,
+    isRead: false,
+    createdAt: new Date().toISOString()
+  };
+  db.notifications.unshift(notif);
+
+  saveDB(db);
+  res.json({ success: true, order: found });
 });
 
 // Serving the Single Page App Frontend with Vite Middleware in Dev

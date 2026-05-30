@@ -39,7 +39,21 @@ const AnimeUserProfileIcon = ({ name }: { name: string }) => {
 };
 
 export function BuyerDashboard() {
-  const { currentUser, gigs, users, inquiries, submitInquiry, incrementViews, clearInquiries, deleteInquiry } = useApp();
+  const {
+    currentUser,
+    gigs,
+    users,
+    inquiries,
+    orders,
+    submitInquiry,
+    submitOrder,
+    completeAndRateOrder,
+    disputeOrder,
+    incrementViews,
+    clearInquiries,
+    deleteInquiry,
+    setActiveView
+  } = useApp();
   
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
@@ -54,8 +68,68 @@ export function BuyerDashboard() {
   const [inquiryResult, setInquiryResult] = useState<{ success: boolean; message: string } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Direct Order handling states
+  const [orderResult, setOrderResult] = useState<{ success: boolean; message: string } | null>(null);
+  const [isOrdering, setIsOrdering] = useState(false);
+
+  // Inline rating / dispute status expansion states
+  const [activeRateOrderId, setActiveRateOrderId] = useState<string | null>(null);
+  const [ratingVal, setRatingVal] = useState<number>(5);
+  const [ratingComment, setRatingComment] = useState("");
+
+  const [activeDisputeOrderId, setActiveDisputeOrderId] = useState<string | null>(null);
+  const [disputeReasonMsg, setDisputeReasonMsg] = useState("");
+
   // Active slideshow index
   const [mediaIdx, setMediaIdx] = useState(0);
+
+  // Seller rating aggregate breakdown analysis helper
+  const getSellerRatingAnalysis = (sellerId: string) => {
+    const sellerGigs = gigs.filter((g) => g.sellerId === sellerId);
+    const sellerCompletedOrders = (orders || []).filter((o) => o.sellerId === sellerId && o.status === "completed" && o.rating);
+    const ratings: number[] = [];
+
+    // Prioritize direct order rating outcomes
+    sellerCompletedOrders.forEach(o => {
+      if (typeof o.rating === "number") ratings.push(o.rating);
+    });
+
+    // Fall back to general gig reputation
+    sellerGigs.forEach(g => {
+      const count = g.ratingCount || 1;
+      for (let i = 0; i < count; i++) {
+        ratings.push(g.rating !== undefined ? g.rating : 5.0);
+      }
+    });
+
+    if (ratings.length === 0) {
+      return {
+        average: 5.0,
+        total: 0,
+        distribution: { 5: 100, 4: 0, 3: 0, 2: 0, 1: 0 }
+      };
+    }
+
+    const sum = ratings.reduce((acc, r) => acc + r, 0);
+    const avg = Number((sum / ratings.length).toFixed(1));
+    const counts: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    
+    ratings.forEach((val) => {
+      const rounded = Math.min(5, Math.max(1, Math.round(val)));
+      counts[rounded] = (counts[rounded] || 0) + 1;
+    });
+
+    const dist: Record<number, number> = {};
+    [1, 2, 3, 4, 5].forEach((num) => {
+      dist[num] = Math.round((counts[num] / ratings.length) * 100);
+    });
+
+    return {
+      average: avg,
+      total: ratings.length,
+      distribution: dist
+    };
+  };
 
   const categories = ['All', 'Development', 'Design', 'AI Services', 'Marketing', 'Writing', 'Video Editing'];
 
@@ -119,6 +193,35 @@ export function BuyerDashboard() {
     }
   };
 
+  const handlePlaceDirectOrder = async () => {
+    if (!activeGig) return;
+    setIsOrdering(true);
+    setOrderResult(null);
+    try {
+      const priceToUse = proposedBudget || activeGig.price;
+      const res = await submitOrder(
+        activeGig.id,
+        priceToUse,
+        activeGig.sellerId,
+        activeGig.sellerName,
+        activeGig.title
+      );
+      setOrderResult(res);
+      if (res.success) {
+        // Increment views counts
+        incrementViews(activeGig.id);
+        setTimeout(() => {
+          setActiveGig(null);
+          setOrderResult(null);
+        }, 2100);
+      }
+    } catch (err) {
+      setOrderResult({ success: false, message: "Order placement transmission failed." });
+    } finally {
+      setIsOrdering(false);
+    }
+  };
+
   // Find seller object in general platform database for disclosure
   const getSellerInfo = (sellerId: string) => {
     return users.find((u) => u.id === sellerId);
@@ -130,6 +233,7 @@ export function BuyerDashboard() {
       {/* Search and Hero Spotlight block */}
       <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 border border-slate-800 px-6 py-14 md:px-12 text-white shadow-2xl shadow-indigo-900/10">
         <div className="absolute inset-0 bg-gradient-to-tr from-[#050505] via-slate-900 to-indigo-950/20" />
+
         <div className="relative z-10 max-w-2xl mx-auto text-center">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-800/80 px-4 py-1.5 text-xs font-bold text-slate-300 border border-slate-700/50 mb-6">
             <Compass className="h-3.5 w-3.5" />
@@ -305,6 +409,274 @@ export function BuyerDashboard() {
           ))
         )}
       </div>
+
+      {/* MY ACTIVE COMMISSIONS, ORDERS, AND CONCURRENCIES TRACKER - SECUREMENTS RESERVED FOR PROFILE DETAILS */}
+      <section className="hidden bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 shadow-sm border border-slate-200 dark:border-slate-800 space-y-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+          <div>
+            <h3 className="font-display text-lg font-bold text-slate-850 dark:text-white flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+              My Orders & Service Commissions ({(orders || []).filter((o) => o.buyerId === currentUser?.id).length})
+            </h3>
+            <p className="text-xs text-slate-400 dark:text-slate-505 mt-1">
+              Verify service active status, complete deliverables, provide seller ratings, or report disputes.
+            </p>
+          </div>
+        </div>
+
+        {(orders || []).filter((o) => o.buyerId === currentUser?.id).length === 0 ? (
+          <div className="text-center py-12 text-slate-400 dark:text-slate-500 italic text-xs">
+            No service commissions or active order transactions placed yet. Select an available service above to proceed.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {(orders || [])
+              .filter((o) => o.buyerId === currentUser?.id)
+              .map((ord) => {
+                return (
+                  <div
+                    key={ord.id}
+                    className="p-5 rounded-2xl border border-slate-150 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 flex flex-col justify-between space-y-4"
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-wider font-mono font-bold text-slate-400 dark:text-slate-500">
+                          Order ID: {ord.id}
+                        </span>
+                        <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase ${
+                          ord.status === 'completed'
+                            ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400'
+                            : ord.status === 'delivered'
+                            ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-100/30'
+                            : ord.status === 'in_progress'
+                            ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-605 dark:text-amber-400'
+                            : ord.status === 'disputed'
+                            ? 'bg-rose-550/10 dark:bg-rose-950/40 text-rose-600 dark:text-rose-450'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                        }`}>
+                          {ord.status.replace('_', ' ')}
+                        </span>
+                      </div>
+
+                      <div>
+                        <h4 className="font-extrabold text-sm text-slate-850 dark:text-white line-clamp-1">
+                          {ord.gigTitle}
+                        </h4>
+                        <div className="flex items-center gap-1.5 mt-1 text-xs text-slate-550 dark:text-slate-400">
+                          <span>Target Seller: <strong className="text-slate-705 dark:text-slate-300">{ord.sellerName}</strong></span>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 dark:border-slate-800/40 flex items-center justify-between">
+                        <span className="text-xs text-slate-400 dark:text-slate-500 font-semibold">Total Price Paid:</span>
+                        <span className="font-extrabold text-sm text-emerald-600 dark:text-emerald-400">
+                          ${ord.price}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* ORDER LIFECYCLE ACTION RENDERING */}
+                    <div className="pt-3 border-t border-slate-150 dark:border-slate-800/40 space-y-3">
+                      {ord.status === 'pending_seller' && (
+                        <div className="text-[11px] text-slate-500 dark:text-slate-400 italic">
+                          ⏳ Waiting for Seller to accept order workspace and initiate work.
+                        </div>
+                      )}
+
+                      {ord.status === 'in_progress' && (
+                        <div className="space-y-2">
+                          <div className="text-[11.5px] text-amber-600 dark:text-amber-400 font-bold flex items-center gap-1">
+                            🔨 Development is currently in progress!
+                          </div>
+                          
+                          {activeDisputeOrderId !== ord.id ? (
+                            <button
+                              onClick={() => {
+                                setActiveDisputeOrderId(ord.id);
+                                setActiveRateOrderId(null);
+                                setDisputeReasonMsg("");
+                              }}
+                              className="text-[10px] uppercase font-bold text-rose-500 hover:underline flex items-center gap-1 cursor-pointer"
+                            >
+                              ⚠️ Report Issue / Conflict
+                            </button>
+                          ) : (
+                            <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700/80 space-y-3 mt-3 animate-fade-in">
+                              <span className="font-bold text-xs text-slate-805 dark:text-white block">Explain the conflict reason:</span>
+                              <textarea
+                                rows={2}
+                                required
+                                placeholder="State what issue occurred during this commission workspace..."
+                                value={disputeReasonMsg}
+                                onChange={(e) => setDisputeReasonMsg(e.target.value)}
+                                className="w-full text-xs p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-850 dark:text-white focus:outline-none"
+                              />
+                              <div className="flex justify-end gap-2 text-xs">
+                                <button
+                                  onClick={() => setActiveDisputeOrderId(null)}
+                                  className="px-3 py-1 bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-300 rounded cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  disabled={!disputeReasonMsg.trim()}
+                                  onClick={() => {
+                                    disputeOrder(ord.id, disputeReasonMsg);
+                                    setActiveDisputeOrderId(null);
+                                    setDisputeReasonMsg("");
+                                  }}
+                                  className="px-3 py-1 rounded bg-rose-600 font-bold text-white hover:bg-rose-705 disabled:opacity-40 cursor-pointer"
+                                >
+                                  Submit Report
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {ord.status === 'delivered' && (
+                        <div className="space-y-3 text-xs">
+                          <div className="p-2.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/20 border border-indigo-100/30 dark:border-indigo-900/40 text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
+                            🎉 Seller delivery uploaded! Review outputs, then choose to Approve & Rate, or notify issue.
+                          </div>
+                          
+                          {activeRateOrderId !== ord.id && activeDisputeOrderId !== ord.id && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => {
+                                  setActiveRateOrderId(ord.id);
+                                  setActiveDisputeOrderId(null);
+                                  setRatingVal(5);
+                                  setRatingComment("");
+                                }}
+                                className="px-3.5 py-1.5 rounded-xl bg-indigo-600 text-white hover:bg-indigo-700 font-bold text-[11px] transition cursor-pointer"
+                              >
+                                Accept & Rate Seller
+                              </button>
+                              <button
+                                onClick={() => {
+                                  setActiveDisputeOrderId(ord.id);
+                                  setActiveRateOrderId(null);
+                                  setDisputeReasonMsg("");
+                                }}
+                                className="px-3 py-1.5 rounded-xl bg-rose-50 dark:bg-slate-800 text-rose-600 dark:text-rose-400 hover:bg-rose-100 dark:hover:bg-rose-950/25 font-bold text-[11px] transition cursor-pointer"
+                              >
+                                ⚠️ Report Issue
+                              </button>
+                            </div>
+                          )}
+
+                          {activeRateOrderId === ord.id && (
+                            <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-3 mt-3 animate-fade-in">
+                              <span className="font-bold text-xs text-slate-800 dark:text-white block">Provide Rating Feedback:</span>
+                              <div className="flex gap-2.5 items-center">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <button
+                                    key={star}
+                                    type="button"
+                                    onClick={() => setRatingVal(star)}
+                                    className="cursor-pointer transition hover:scale-110 active:scale-95"
+                                  >
+                                    <Star className={`h-6 w-6 ${star <= ratingVal ? 'fill-amber-500 text-amber-500' : 'text-slate-300 dark:text-slate-600'}`} />
+                                  </button>
+                                ))}
+                              </div>
+                              <textarea
+                                rows={2}
+                                placeholder="Share review comments about this vendor (optional)..."
+                                value={ratingComment}
+                                onChange={(e) => setRatingComment(e.target.value)}
+                                className="w-full text-xs p-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-850 dark:text-white focus:outline-none"
+                              />
+                              <div className="flex justify-end gap-2 text-xs">
+                                <button
+                                  onClick={() => setActiveRateOrderId(null)}
+                                  className="px-3 py-1 bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-300 rounded cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    completeAndRateOrder(ord.id, ratingVal, ratingComment);
+                                    setActiveRateOrderId(null);
+                                    setRatingComment("");
+                                  }}
+                                  className="px-3 py-1 rounded bg-indigo-600 font-bold text-white hover:bg-indigo-705 cursor-pointer"
+                                >
+                                  Submit & Complete
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          {activeDisputeOrderId === ord.id && (
+                            <div className="p-3.5 rounded-xl bg-slate-105 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 space-y-3 mt-3 animate-fade-in">
+                              <span className="font-bold text-xs text-slate-805 dark:text-white block">Conflict / Issue Description:</span>
+                              <textarea
+                                rows={2}
+                                required
+                                placeholder="Explain potential issues in detail..."
+                                value={disputeReasonMsg}
+                                onChange={(e) => setDisputeReasonMsg(e.target.value)}
+                                className="w-full text-xs p-2 rounded-lg border border-slate-300 dark:border-slate-705 bg-white dark:bg-slate-900 text-slate-850 dark:text-white focus:outline-none"
+                              />
+                              <div className="flex justify-end gap-2 text-xs">
+                                <button
+                                  onClick={() => setActiveDisputeOrderId(null)}
+                                  className="px-3 py-1 bg-slate-200 dark:bg-slate-750 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-300 rounded cursor-pointer"
+                                >
+                                  Cancel
+                                </button>
+                                <button
+                                  disabled={!disputeReasonMsg.trim()}
+                                  onClick={() => {
+                                    disputeOrder(ord.id, disputeReasonMsg);
+                                    setActiveDisputeOrderId(null);
+                                    setDisputeReasonMsg("");
+                                  }}
+                                  className="px-3 py-1 rounded bg-rose-600 font-extrabold text-white hover:bg-rose-705 disabled:opacity-40 cursor-pointer"
+                                >
+                                  Submit Report
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {ord.status === 'completed' && (
+                        <div className="p-3.5 rounded-xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-100/20 dark:border-emerald-900/20 space-y-1.5 text-[11px]">
+                          <span className="text-emerald-700 dark:text-emerald-400 font-bold block">✓ Commission Completed & Rated</span>
+                          {ord.rating && (
+                            <div className="flex items-center gap-1 my-0.5">
+                              <span className="text-slate-400 font-bold">Your Score:</span>
+                              <div className="flex text-amber-500">
+                                {Array.from({ length: ord.rating }).map((_, i) => (
+                                  <Star key={i} className="h-3 w-3 fill-current" />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {ord.ratingComment && (
+                            <p className="text-slate-600 dark:text-slate-300 italic">"{ord.ratingComment}"</p>
+                          )}
+                        </div>
+                      )}
+
+                      {ord.status === 'disputed' && (
+                        <div className="p-3.5 rounded-xl bg-rose-50/40 dark:bg-rose-950/20 border border-rose-100/20 dark:border-rose-900/20 text-[11px] space-y-1">
+                          <span className="text-rose-700 dark:text-rose-450 font-bold block">⚠️ Issue Filed / Under Investigation</span>
+                          <p className="text-slate-600 dark:text-slate-300 italic">Report details: "{ord.disputeReason}"</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+          </div>
+        )}
+      </section>
 
       {/* MY SENT INQUIRIES WORK HISTORY LIST */}
       {inquiries.filter((inq) => inq.buyerId === currentUser?.id).length > 0 && (
@@ -650,9 +1022,46 @@ export function BuyerDashboard() {
                           This seller has not fully populated his Up-and-Coming resume portfolio yet.
                         </p>
                       )}
+
+                      {/* SELLER RATING ANALYSIS BANNER BLOCK */}
+                      <div className="bg-indigo-50/25 dark:bg-slate-900/60 rounded-2xl p-4 border border-slate-100 dark:border-indigo-950/45 space-y-3 mt-3">
+                        <span className="text-[10px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-wider block">Seller Rating Analysis</span>
+                        {(() => {
+                          const anal = getSellerRatingAnalysis(activeGig.sellerId);
+                          return (
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <div className="text-center shrink-0">
+                                  <span className="text-3xl font-extrabold text-indigo-600 dark:text-indigo-400 block">{anal.average}</span>
+                                  <div className="flex justify-center text-amber-500 my-0.5">
+                                    <Star className="h-3.5 w-3.5 fill-current" />
+                                  </div>
+                                  <span className="text-[9px] text-slate-400 dark:text-slate-505 font-bold block">{anal.total} Reviews</span>
+                                </div>
+                                
+                                <div className="flex-1 space-y-1">
+                                  {[5, 4, 3, 2, 1].map((stars) => {
+                                    const pct = anal.distribution[stars] || 0;
+                                    return (
+                                      <div key={stars} className="flex items-center gap-2 text-[10px]">
+                                        <span className="w-3 text-slate-400 dark:text-slate-500 font-bold text-right">{stars}★</span>
+                                        <div className="flex-1 h-1.5 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
+                                          <div className="h-full bg-gradient-to-r from-amber-400 to-amber-505 rounded-full" style={{ width: `${pct}%` }} />
+                                        </div>
+                                        <span className="w-6 text-slate-400 dark:text-slate-550 font-semibold text-right">{pct}%</span>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
                     </div>
 
-                    {/* Inquiry Submission Form Area */}
+                    {/* Inquiry & Direct Checkout Submission Form Area */}
                     <div className="space-y-4 pt-6 border-t border-slate-100 dark:border-slate-800/60 mt-auto">
                       <div className="flex items-center justify-between text-xs font-bold uppercase tracking-wider">
                         <span className="text-slate-500 dark:text-slate-400">Standard Price:</span>
@@ -669,6 +1078,20 @@ export function BuyerDashboard() {
                           <div>
                             <span className="font-bold text-xs block">{inquiryResult.success ? 'Inquiry Sent!' : 'Submission Failed'}</span>
                             <span className="text-[10px] leading-tight block mt-0.5">{inquiryResult.message}</span>
+                          </div>
+                        </div>
+                      )}
+
+                      {orderResult && (
+                        <div className={`p-4 rounded-2xl flex items-start gap-2.5 border ${
+                          orderResult.success
+                            ? 'bg-indigo-50 dark:bg-indigo-950/20 border-indigo-100 dark:border-indigo-900/50 text-indigo-850 dark:text-indigo-400'
+                            : 'bg-rose-550/10 dark:bg-rose-950/20 border-rose-500/20 text-rose-600 dark:text-rose-450'
+                        }`}>
+                          <ShoppingBag className="h-5 w-5 shrink-0 mt-0.5" />
+                          <div>
+                            <span className="font-bold text-xs block">{orderResult.success ? 'Direct Order Placed!' : 'Order Placement Failed'}</span>
+                            <span className="text-[10px] leading-tight block mt-0.5">{orderResult.message}</span>
                           </div>
                         </div>
                       )}
@@ -702,14 +1125,26 @@ export function BuyerDashboard() {
                           />
                         </div>
 
-                        <button
-                          type="submit"
-                          disabled={isSubmitting || (inquiryResult?.success)}
-                          className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
-                        >
-                          <Send className="h-3.5 w-3.5" />
-                          {isSubmitting ? 'Transmitting Inquiries...' : 'Submit Custom Inquiry'}
-                        </button>
+                        <div className="grid grid-cols-1 gap-2.5 pt-1">
+                          <button
+                            type="submit"
+                            disabled={isSubmitting || isOrdering || (inquiryResult?.success)}
+                            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-xs font-bold text-white shadow-lg transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                          >
+                            <Send className="h-3.5 w-3.5" />
+                            {isSubmitting ? 'Transmitting Inquiries...' : 'Submit Custom Inquiry'}
+                          </button>
+
+                          <button
+                            type="button"
+                            disabled={isSubmitting || isOrdering || (orderResult?.success)}
+                            onClick={handlePlaceDirectOrder}
+                            className="w-full py-3 rounded-xl bg-gradient-to-tr from-[#10b981] to-[#059669] hover:brightness-110 text-xs font-extrabold text-white shadow-xl shadow-emerald-500/10 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-40 disabled:pointer-events-none"
+                          >
+                            <ShoppingBag className="h-4 w-4" />
+                            {isOrdering ? 'Placing direct order...' : `Place Direct Order ($${proposedBudget || activeGig.price})`}
+                          </button>
+                        </div>
                       </form>
                     </div>
 

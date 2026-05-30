@@ -13,7 +13,18 @@ const PRESET_IMAGES = [
 ];
 
 export function SellerDashboard() {
-  const { currentUser, gigs, addGig, deleteGig, inquiries, updatePortfolio, respondToInquiry } = useApp();
+  const {
+    currentUser,
+    gigs,
+    addGig,
+    deleteGig,
+    inquiries,
+    orders,
+    acceptOrder,
+    deliverOrder,
+    updatePortfolio,
+    respondToInquiry
+  } = useApp();
 
   // Active form states
   const [replyInquiryId, setReplyInquiryId] = useState<string | null>(null);
@@ -661,6 +672,125 @@ export function SellerDashboard() {
                     )}
                   </div>
                 ))}
+              </div>
+            )}
+          </section>
+
+          {/* INCOMING COMMISSIONS & PROJECTS WORKSPACE - SECUREMENTS RESERVED FOR CENTRALIZED PROFILE PAGE */}
+          <section className="hidden bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-indigo-900/5 space-y-6">
+            <div>
+              <h3 className="text-xl md:text-2xl font-bold font-display tracking-tight flex items-center gap-2 text-slate-850 dark:text-white">
+                <CheckCircle className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
+                Active Project Commissions ({(orders || []).filter((o) => o.sellerId === currentUser.id).length})
+              </h3>
+              <p className="text-xs text-slate-400 mt-2">
+                Manage your service orders, accept workspace contracts, and dispatch final deliverables for client confirmation.
+              </p>
+            </div>
+
+            {(orders || []).filter((o) => o.sellerId === currentUser.id).length === 0 ? (
+              <div className="p-10 text-center text-slate-400 dark:text-slate-500 bg-slate-50/50 dark:bg-slate-900/40 rounded-2xl border border-slate-100 dark:border-slate-800 italic text-xs">
+                No orders or project commissions have been placed on your service catalog listings yet.
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {(orders || [])
+                  .filter((o) => o.sellerId === currentUser.id)
+                  .map((ord) => {
+                    return (
+                      <div
+                        key={ord.id}
+                        className="p-5 rounded-2xl border border-slate-150 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 space-y-3"
+                      >
+                        <div className="flex flex-wrap items-center justify-between gap-3 font-sans">
+                          <div>
+                            <span className="text-[10px] tracking-wider uppercase font-mono font-bold text-slate-400">
+                              Catalog Referral: {ord.gigTitle}
+                            </span>
+                            <h4 className="font-extrabold text-sm text-slate-850 dark:text-white mt-1">
+                              Client: {ord.buyerName} ({ord.buyerEmail})
+                            </h4>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mr-2">
+                              Budget: ${ord.price}
+                            </span>
+                            
+                            <span className={`px-2.5 py-0.5 rounded-full text-[9px] font-extrabold tracking-wide uppercase ${
+                              ord.status === 'completed'
+                                ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400'
+                                : ord.status === 'delivered'
+                                ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-150/30'
+                                : ord.status === 'in_progress'
+                                ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-500 border border-amber-155/20'
+                                : ord.status === 'disputed'
+                                ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-450 border border-rose-150/20'
+                                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300'
+                            }`}>
+                              {ord.status.replace('_', ' ')}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* WORKSPACE ACTIONS */}
+                        <div className="pt-3 border-t border-slate-150 dark:border-slate-805 flex justify-end gap-2">
+                          {ord.status === 'pending_seller' && (
+                            <button
+                              onClick={() => acceptOrder(ord.id)}
+                              className="px-4 py-2 hover:scale-[1.01] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs transition active:scale-95 cursor-pointer shadow-md"
+                            >
+                              ✓ Accept Commission & Claim Work
+                            </button>
+                          )}
+
+                          {ord.status === 'in_progress' && (
+                            <button
+                              onClick={() => deliverOrder(ord.id)}
+                              className="px-4 py-2 hover:scale-[1.01] rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs transition active:scale-95 cursor-pointer shadow-md"
+                            >
+                              ⚡ Confirm Delivery (Dispatch Uploads)
+                            </button>
+                          )}
+
+                          {ord.status === 'delivered' && (
+                            <div className="text-xs font-bold text-indigo-505 dark:text-indigo-400 italic bg-indigo-50/20 dark:bg-slate-850 px-3 py-1.5 rounded-lg border border-indigo-100/10">
+                              ℹ Deliverables submitted. Waiting on client confirmation & rating review.
+                            </div>
+                          )}
+
+                          {ord.status === 'completed' && (
+                            <div className="w-full text-xs bg-emerald-50/30 dark:bg-slate-855 rounded-xl border border-emerald-100/20 px-4 py-3 space-y-1">
+                              <div className="flex items-center justify-between">
+                                <span className="font-extrabold text-[#059669] dark:text-emerald-400">✓ Project Finalized Successfully</span>
+                                {ord.rating && (
+                                  <div className="flex text-amber-500">
+                                    {Array.from({ length: ord.rating }).map((_, idx) => (
+                                      <span key={idx}>★</span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              {ord.ratingComment && (
+                                <p className="text-slate-500 dark:text-slate-300 italic">" {ord.ratingComment} "</p>
+                              )}
+                            </div>
+                          )}
+
+                          {ord.status === 'disputed' && (
+                            <div className="w-full text-xs bg-rose-50/40 dark:bg-rose-950/25 rounded-xl border border-rose-105 px-4 py-3 space-y-1 text-slate-800 dark:text-slate-300">
+                              <span className="font-extrabold text-rose-600 dark:text-rose-400 block animate-pulse">⚠️ Client Dispute / Issue Filed</span>
+                              <p className="italic text-slate-500 dark:text-slate-400 text-xs">"{ord.disputeReason}"</p>
+                              <p className="text-[10px] text-slate-400 mt-1 leading-normal">
+                                Resolve with the client directly or contact MelAgent mediation hub.
+                              </p>
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+                    );
+                  })}
               </div>
             )}
           </section>

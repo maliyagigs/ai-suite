@@ -12,7 +12,9 @@ export function Navbar() {
     toggleTheme, 
     notifications = [], 
     markNotificationAsRead, 
-    clearNotifications 
+    clearNotifications,
+    activeView,
+    setActiveView
   } = useApp();
 
   const [showNotifications, setShowNotifications] = useState(false);
@@ -48,14 +50,17 @@ export function Navbar() {
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         
         {/* Brand Logo */}
-        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        <button
+          onClick={() => setActiveView('dashboard')}
+          className="flex items-center gap-1.5 sm:gap-2 shrink-0 cursor-pointer hover:opacity-80 transition animate-fade-in"
+        >
           <div className="flex h-8 w-8 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 overflow-hidden shadow-sm shrink-0">
             <Sparkles className="h-4.5 w-4.5 sm:h-4.5 sm:w-4.5" />
           </div>
           <span className="font-display text-lg sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white shrink-0 hidden sm:inline-block">
             MelAgent
           </span>
-        </div>
+        </button>
 
         {/* Central Controls: Buyer/Seller Switcher (Only for standard non-admins) */}
         <div className="flex items-center gap-1 sm:gap-6 mx-1 sm:mx-0 min-w-0 md:grow md:justify-center">
@@ -213,13 +218,34 @@ export function Navbar() {
 
           <div className="h-6 w-px bg-slate-200 dark:bg-slate-800" />
 
-          {/* Logged in entity credentials info */}
-          <div className="hidden md:block text-right select-text">
-            <div className="text-sm font-bold text-slate-800 dark:text-slate-205">{currentUser.name}</div>
-            <div className="text-[10px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500">
-              {isAdmin ? 'System Admin' : isSeller ? 'Seller profile' : 'Buyer profile'}
+          {/* Logged in entity credentials info with beautiful clickable Avatar */}
+          <button
+            onClick={() => setActiveView(activeView === 'profile' ? 'dashboard' : 'profile')}
+            className={`flex items-center gap-2.5 text-left border rounded-xl p-1 px-2.5 transition cursor-pointer ${
+              activeView === 'profile'
+                ? 'border-indigo-500 bg-indigo-50/10 dark:bg-indigo-950/20'
+                : 'border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800'
+            }`}
+            title="Manage Profile, Customizations & Settings"
+          >
+            {currentUser.avatarUrl ? (
+              <img
+                src={currentUser.avatarUrl}
+                alt={currentUser.name}
+                className="w-7 h-7 rounded-lg object-cover border border-slate-350 dark:border-slate-700"
+              />
+            ) : (
+              <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white font-display text-[10px] font-extrabold flex items-center justify-center">
+                {currentUser.name[0].toUpperCase()}
+              </div>
+            )}
+            <div className="hidden md:block select-none leading-none">
+              <div className="text-xs font-bold text-slate-805 dark:text-slate-205">{currentUser.name}</div>
+              <span className="text-[9px] uppercase font-extrabold tracking-wider text-slate-400 dark:text-slate-500 mt-0.5 block">
+                {isAdmin ? 'System Admin' : isSeller ? 'Seller profile' : 'Buyer profile'}
+              </span>
             </div>
-          </div>
+          </button>
 
           {/* Logout Trigger button */}
           <button

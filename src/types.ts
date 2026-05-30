@@ -21,6 +21,9 @@ export interface User {
   joinedDate: string;
   portfolio?: SellerPortfolio;
   sellerStatus?: 'none' | 'pending' | 'approved' | 'rejected';
+  avatarUrl?: string;
+  bio?: string;
+  customThemeColor?: string;
 }
 
 export interface Gig {
@@ -71,3 +74,24 @@ export interface Inquiry {
   respondedAt?: string;
   createdAt: string;
 }
+
+export type OrderStatus = 'pending_seller' | 'in_progress' | 'delivered' | 'completed' | 'disputed';
+
+export interface Order {
+  id: string;
+  gigId: string;
+  gigTitle: string;
+  price: number;
+  buyerId: string;
+  buyerName: string;
+  sellerId: string;
+  sellerName: string;
+  status: OrderStatus;
+  disputeReason?: string;
+  rating?: number; // 1-5
+  ratingComment?: string;
+  createdAt: string;
+  deliveredAt?: string;
+  completedAt?: string;
+}
+
