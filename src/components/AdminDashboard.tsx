@@ -105,8 +105,8 @@ export function AdminDashboard() {
 
       {/* Metrics Board */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center gap-4">
-          <div className="p-3 md:p-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 rounded-xl md:rounded-2xl shrink-0">
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-4 md:p-6 shadow-xl shadow-indigo-900/5 border border-slate-200/80 dark:border-slate-800 flex items-center gap-4">
+          <div className="p-3 md:p-4 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-650 dark:text-indigo-400 rounded-[1.25rem] shrink-0">
             <Users className="h-5 w-5 md:h-6 md:w-6" />
           </div>
           <div className="min-w-0">
@@ -119,8 +119,8 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center gap-4">
-          <div className="p-3 md:p-4 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-650 dark:text-emerald-400 rounded-xl md:rounded-2xl shrink-0">
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-4 md:p-6 shadow-xl shadow-indigo-900/5 border border-slate-200/80 dark:border-slate-800 flex items-center gap-4">
+          <div className="p-3 md:p-4 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-650 dark:text-emerald-400 rounded-[1.25rem] shrink-0">
             <Layout className="h-5 w-5 md:h-6 md:w-6" />
           </div>
           <div className="min-w-0">
@@ -133,8 +133,8 @@ export function AdminDashboard() {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-6 shadow-sm border border-slate-200/80 dark:border-slate-800 flex items-center gap-4">
-          <div className="p-3 md:p-4 bg-amber-50 dark:bg-amber-950/40 text-amber-655 dark:text-amber-400 rounded-xl md:rounded-2xl shrink-0">
+        <div className="bg-white dark:bg-slate-900 rounded-[2rem] p-4 md:p-6 shadow-xl shadow-indigo-900/5 border border-slate-200/80 dark:border-slate-800 flex items-center gap-4">
+          <div className="p-3 md:p-4 bg-amber-50 dark:bg-amber-950/40 text-amber-655 dark:text-amber-400 rounded-[1.25rem] shrink-0">
             <MessageSquare className="h-5 w-5 md:h-6 md:w-6" />
           </div>
           <div className="min-w-0">
@@ -194,7 +194,7 @@ export function AdminDashboard() {
       </div>
 
       {/* Main interactive lists */}
-      <div className="bg-white dark:bg-slate-900 rounded-2xl md:rounded-3xl p-4 md:p-8 shadow-sm border border-slate-200/80 dark:border-slate-800 min-h-[350px]">
+      <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-8 shadow-xl shadow-indigo-900/5 border border-slate-200/80 dark:border-slate-800 min-h-[350px]">
         {/* TAB 4: SELLER APPLICATIONS */}
         {activeTab === "applications" && (
           <div className="space-y-4 md:space-y-6">

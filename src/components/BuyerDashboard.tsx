@@ -131,31 +131,28 @@ export function BuyerDashboard() {
     <div className="space-y-8 py-6 animate-fade-in text-slate-900 dark:text-slate-100 transition-colors duration-200">
       
       {/* Search and Hero Spotlight block */}
-      <div className="relative overflow-hidden rounded-3xl bg-slate-900 px-6 py-10 md:px-10 text-white shadow-xl ring-1 ring-slate-800">
-        <div className="absolute inset-0 bg-gradient-to-tr from-indigo-950 via-slate-900 to-indigo-900/40" />
-        <div className="relative z-10 max-w-2xl">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-3.5 py-1 text-xs font-semibold text-indigo-300 ring-1 ring-indigo-500/20 mb-4 animate-pulse">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-slate-900 border border-slate-800 px-6 py-14 md:px-12 text-white shadow-2xl shadow-indigo-900/10">
+        <div className="absolute inset-0 bg-gradient-to-tr from-[#050505] via-slate-900 to-indigo-950/20" />
+        <div className="relative z-10 max-w-2xl mx-auto text-center">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-800/80 px-4 py-1.5 text-xs font-bold text-slate-300 border border-slate-700/50 mb-6">
             <Compass className="h-3.5 w-3.5" />
             Discover Validated Agency Talents
           </span>
-          <h1 className="font-display text-2xl md:text-3xl font-extrabold tracking-tight text-white mb-2 leading-tight">
-            Find premium freelance services for your custom operations
+          <h1 className="font-display text-4xl md:text-5xl lg:text-[3.5rem] font-bold tracking-tight text-white mb-6 leading-[1.1] pb-2">
+            Find premium freelance services for your custom operations.
           </h1>
-          <p className="text-slate-350 text-xs md:text-sm mb-6 leading-relaxed">
-            Search developer listings, inspect updatable portfolios, view video demos, and send inquiries directly.
-          </p>
 
           {/* Search Bar */}
-          <div className="relative">
-            <span className="absolute inset-y-0 left-4 flex items-center text-slate-400 pointer-events-none">
-              <Search className="h-4.5 w-4.5" />
+          <div className="relative max-w-xl mx-auto mt-8">
+            <span className="absolute inset-y-0 left-5 flex items-center text-slate-400 pointer-events-none">
+              <Search className="h-5 w-5" />
             </span>
             <input
               type="text"
               placeholder="Search topics (e.g., 'React', 'Branding', 'AI Chatbot')..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-2xl bg-white/10 text-white placeholder-slate-400 py-3.5 pl-12 pr-4 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500 shadow-md backdrop-blur-md"
+              className="w-full rounded-full bg-white/10 text-white placeholder-slate-400 py-4 pl-14 pr-4 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-indigo-500/50 border border-white/10 shadow-md backdrop-blur-md transition-all hover:bg-white/15"
             />
           </div>
         </div>
@@ -191,15 +188,15 @@ export function BuyerDashboard() {
           </div>
         </div>
 
-        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide">
+        <div className="flex gap-2 overflow-x-auto pb-1.5 scrollbar-hide py-2">
           {categories.map((cat) => (
             <button
               key={cat}
               onClick={() => setSelectedCategory(cat)}
-              className={`rounded-2xl px-4 py-2.5 text-xs font-bold tracking-wide whitespace-nowrap border cursor-pointer transition-all ${
+              className={`rounded-full px-5 py-2.5 text-sm font-semibold tracking-wide whitespace-nowrap border cursor-pointer transition-all ${
                 selectedCategory === cat
-                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-slate-900 border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-350 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  ? 'bg-slate-900 dark:bg-white border-slate-900 dark:border-white text-white dark:text-slate-900 shadow-sm'
+                  : 'bg-white dark:bg-slate-900/50 border-slate-200/80 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               {cat}
@@ -230,17 +227,17 @@ export function BuyerDashboard() {
                 setInquiryResult(null);
                 setMediaIdx(0);
               }}
-              className="group cursor-pointer bg-white dark:bg-slate-900 rounded-3xl overflow-hidden border border-slate-200/80 dark:border-slate-800/80 hover:shadow-xl dark:hover:border-slate-750 transition-all duration-300 flex flex-col h-full"
+              className="group cursor-pointer bg-white dark:bg-slate-900 rounded-[2rem] overflow-hidden border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-slate-200/40 dark:shadow-none hover:-translate-y-1 transition-all duration-300 flex flex-col h-full"
             >
               {/* Media banner image */}
-              <div className="relative aspect-video w-full bg-slate-50 dark:bg-slate-950 overflow-hidden">
+              <div className="relative aspect-video w-full bg-slate-50 dark:bg-[#050505] overflow-hidden">
                 <img
                   src={g.imageUrl}
                   alt={g.title}
                   className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
                 />
-                <span className="absolute top-3 left-3 rounded-lg bg-white/94 dark:bg-slate-900/94 backdrop-blur-sm px-2.5 py-1 text-[10px] font-extrabold text-indigo-700 dark:text-indigo-400 tracking-wider">
-                  {g.category.toUpperCase()}
+                <span className="absolute top-4 left-4 rounded-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm px-3 py-1 text-[10px] font-extrabold text-slate-800 dark:text-slate-200 tracking-wider">
+                  {g.category}
                 </span>
                 
                 {/* PDF/Video badges indicators */}
@@ -419,14 +416,14 @@ export function BuyerDashboard() {
                 initial={{ opacity: 0, scale: 0.96, y: 15 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.96, y: 15 }}
-                className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[85vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 shadow-2xl border border-slate-200/80 dark:border-slate-800 ring-1 ring-slate-100"
+                className="relative w-full max-w-4xl max-h-[92vh] sm:max-h-[85vh] overflow-y-auto rounded-[2rem] bg-white dark:bg-[#09090b] text-slate-900 dark:text-slate-100 shadow-2xl shadow-indigo-900/10 border border-slate-200/80 dark:border-slate-800"
               >
                 {/* Sticky top Close button */}
                 <button
                   onClick={() => setActiveGig(null)}
-                  className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white dark:bg-slate-850 text-slate-600 dark:text-slate-300 shadow-md hover:text-rose-600 border border-slate-100 dark:border-slate-800/60 cursor-pointer"
+                  className="absolute top-4 right-4 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 shadow-md hover:bg-slate-50 hover:text-rose-600 border border-slate-200/60 dark:border-slate-800 cursor-pointer transition-all"
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </button>
 
                 {/* Left/Right splitting panels */}

@@ -43,17 +43,17 @@ export function Navbar() {
   return (
     <header 
       id="app-header" 
-      className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/80 dark:bg-slate-900/80 dark:border-slate-800/80 backdrop-blur-md transition-colors duration-200"
+      className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-[#fcfcfc]/80 dark:bg-[#09090b]/80 dark:border-slate-800/80 backdrop-blur-md transition-colors duration-200"
     >
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-3 sm:px-6 lg:px-8">
         
         {/* Brand Logo */}
         <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-          <div className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-indigo-400 text-white shadow-md shadow-indigo-200 dark:shadow-none shrink-0">
-            <Sparkles className="h-4.5 w-4.5 sm:h-5 sm:w-5" />
+          <div className="flex h-8 w-8 sm:h-8 sm:w-8 items-center justify-center rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 overflow-hidden shadow-sm shrink-0">
+            <Sparkles className="h-4.5 w-4.5 sm:h-4.5 sm:w-4.5" />
           </div>
-          <span className="font-display text-lg sm:text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white shrink-0 hidden sm:inline-block">
-            Mel<span className="bg-gradient-to-r from-indigo-500 to-violet-500 bg-clip-text text-transparent">Agent</span>
+          <span className="font-display text-lg sm:text-lg font-extrabold tracking-tight text-slate-900 dark:text-white shrink-0 hidden sm:inline-block">
+            MelAgent
           </span>
         </div>
 

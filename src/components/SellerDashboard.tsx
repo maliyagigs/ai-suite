@@ -178,10 +178,10 @@ export function SellerDashboard() {
         <div className="lg:col-span-8 space-y-8">
           
           {/* Section 1: Gig Publishing Area */}
-          <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-155 dark:border-slate-800 shadow-sm">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-bold font-display tracking-tight flex items-center gap-2 text-slate-850 dark:text-white">
-                <Plus className="h-5 w-5 text-indigo-600 dark:text-indigo-400 animate-bounce" />
+          <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-indigo-900/5">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-xl md:text-2xl font-bold font-display tracking-tight flex items-center gap-2 text-slate-850 dark:text-white">
+                <Plus className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                 Publish a New Freelance Service
               </h3>
               
@@ -545,9 +545,9 @@ export function SellerDashboard() {
           </section>
 
           {/* Section 2: Incoming Client Inquiries */}
-          <section className="bg-white dark:bg-slate-900 rounded-3xl p-6 md:p-8 border border-slate-155 dark:border-slate-800 shadow-sm">
-            <h3 className="text-xl font-bold font-display tracking-tight flex items-center gap-2 text-slate-850 dark:text-white mb-6">
-              <MessageSquare className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
+          <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-indigo-900/5 mt-8">
+            <h3 className="text-xl md:text-2xl font-bold font-display tracking-tight flex items-center gap-2 text-slate-850 dark:text-white mb-8">
+              <MessageSquare className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
               Direct Client Inquiries ({sellerInquiries.length})
             </h3>
 
@@ -678,15 +678,17 @@ export function SellerDashboard() {
         {/* RIGHT COLUMN (Lg:col-span-4): Updatable Fiverr Portfolio & SEO Advisory Card */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* Section A: Fiverr Portfolio Editor Widget */}
-          <section className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 border border-slate-155 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-lg font-bold font-display tracking-tight flex items-center gap-2 text-slate-850 dark:text-white">
-              <UserPlus className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-              My Fiverr Seller Portfolio
-            </h3>
-            <p className="text-xs text-slate-400">
-              Update your biography details, LinkedIn linkages, contact logs, and credentials visible to prospective buyers.
-            </p>
+          {/* Section A: Fiverr Seller Portfolio Editor Widget */}
+          <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 lg:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-indigo-900/5 space-y-6">
+            <div>
+              <h3 className="text-xl md:text-2xl font-bold font-display tracking-tight flex items-center gap-2 text-slate-850 dark:text-white">
+                <UserPlus className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
+                My Seller Portfolio
+              </h3>
+              <p className="text-xs text-slate-400 mt-2">
+                Update your biography details, LinkedIn linkages, contact logs, and credentials visible to prospective buyers.
+              </p>
+            </div>
 
             <form onSubmit={handlePortfolioUpdate} className="space-y-4">
               
@@ -846,8 +848,8 @@ export function SellerDashboard() {
           </section>
 
           {/* Section C: My Listings quick showcase overview */}
-          <section className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-6 border border-slate-155 dark:border-slate-800 shadow-sm">
-            <h3 className="text-lg font-bold font-display tracking-tight text-slate-850 dark:text-white mb-4">
+          <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 lg:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-indigo-900/5 mt-6">
+            <h3 className="text-xl md:text-2xl font-bold font-display tracking-tight text-slate-850 dark:text-white mb-6">
               My Service Listings ({sellerGigs.length})
             </h3>
 
