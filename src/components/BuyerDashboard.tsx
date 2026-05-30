@@ -3,15 +3,13 @@ import { useApp } from '../context/AppContext';
 import { Gig, SellerPortfolio } from '../types';
 import { Search, Filter, Compass, CheckCircle2, ShoppingBag, X, Star, Video, FileText, Globe, Linkedin, Mail, Phone, ExternalLink, Send, ArrowUpRight, Sparkles, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import * as animeBase from 'animejs';
-const anime = (animeBase as any).default || animeBase;
+import { animate as anime } from 'animejs';
 
 const AnimeUserProfileIcon = ({ name }: { name: string }) => {
   const elRef = useRef<HTMLDivElement>(null);
   
   const handleEnter = () => {
-    anime({
-      targets: elRef.current,
+    anime(elRef.current!, {
       scale: 1.15,
       rotate: '1turn',
       duration: 800,
@@ -20,8 +18,7 @@ const AnimeUserProfileIcon = ({ name }: { name: string }) => {
   };
   
   const handleLeave = () => {
-    anime({
-      targets: elRef.current,
+    anime(elRef.current!, {
       scale: 1,
       rotate: '0turn',
       duration: 600,
@@ -554,10 +551,10 @@ export function BuyerDashboard() {
 
                   </div>
 
-                  {/* RIGHT SPLIT (Lg:col-span-5): Fiverr Portfolio Disclosure & Custom Inquiry form */}
+                  {/* RIGHT SPLIT (Lg:col-span-5): Portfolio Disclosure & Custom Inquiry form */}
                   <div className="lg:col-span-5 p-4 sm:p-6 md:p-8 space-y-6 flex flex-col justify-between">
                     
-                    {/* Fiverr Section: Meet the Seller */}
+                    {/* Section: Meet the Seller */}
                     <div className="space-y-4">
                       <div className="border-b border-slate-100 dark:border-slate-800/60 pb-3">
                         <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Meet the Service Seller</span>

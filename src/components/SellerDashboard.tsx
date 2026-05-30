@@ -163,7 +163,7 @@ export function SellerDashboard() {
         <div>
           <h2 className="text-2xl font-extrabold font-display tracking-tight flex items-center gap-2">
             <Store className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-            Fiverr Seller Control Workspace
+            Seller Control Workspace
           </h2>
           <p className="text-slate-500 dark:text-slate-400 text-xs mt-1">
             Build services, compile an updatable portfolio, coordinate incoming inquiries, and manage SEO visibility.
@@ -184,14 +184,6 @@ export function SellerDashboard() {
                 <Plus className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
                 Publish a New Freelance Service
               </h3>
-              
-              {/* Live SEO Widget */}
-              <div className="flex items-center gap-2 bg-indigo-50/50 dark:bg-indigo-950/20 px-3.5 py-1.5 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
-                <Zap className="h-4 w-4 text-indigo-500" />
-                <span className="text-[11px] font-bold text-indigo-700 dark:text-indigo-400">
-                  Relative SEO Score: {currentSEOScore}%
-                </span>
-              </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -199,7 +191,7 @@ export function SellerDashboard() {
               {/* Primary title */}
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
-                  What service will you offer? (Fiverr style "I will...")
+                  What service will you offer? (e.g. "I will...")
                 </label>
                 <input
                   type="text"
@@ -675,10 +667,10 @@ export function SellerDashboard() {
 
         </div>
 
-        {/* RIGHT COLUMN (Lg:col-span-4): Updatable Fiverr Portfolio & SEO Advisory Card */}
+        {/* RIGHT COLUMN (Lg:col-span-4): Updatable Portfolio & Advisory Card */}
         <div className="lg:col-span-4 space-y-6">
           
-          {/* Section A: Fiverr Seller Portfolio Editor Widget */}
+          {/* Section A: Seller Portfolio Editor Widget */}
           <section className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 lg:p-8 border border-slate-200/80 dark:border-slate-800 shadow-xl shadow-indigo-900/5 space-y-6">
             <div>
               <h3 className="text-xl md:text-2xl font-bold font-display tracking-tight flex items-center gap-2 text-slate-850 dark:text-white">
@@ -842,7 +834,7 @@ export function SellerDashboard() {
               </li>
               <li className="flex items-start gap-2 text-indigo-200 bg-indigo-900/30 p-2 rounded-lg">
                 <HelpCircle className="h-4 w-4 text-indigo-400 shrink-0 mt-0.5" />
-                <span><b>Fiverr Pro-Tip</b>: Fill out all social links (LinkedIn & Phone values) inside the seller profile so buyers can immediately call with confidence.</span>
+                <span><b>Pro-Tip</b>: Fill out all social links (LinkedIn & Phone values) inside the seller profile so buyers can immediately call with confidence.</span>
               </li>
             </ul>
           </section>
@@ -893,7 +885,7 @@ export function SellerDashboard() {
             <CheckCircle className="h-5 w-5 text-emerald-400" />
             <div>
               <div className="text-xs font-semibold text-slate-350">Profile Update</div>
-              <div className="text-sm font-bold">Fiverr Seller Portfolio Synced!</div>
+              <div className="text-sm font-bold">Seller Portfolio Synced!</div>
             </div>
           </motion.div>
         )}

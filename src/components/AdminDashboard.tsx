@@ -17,15 +17,13 @@ import {
   X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
-import * as animeBase from "animejs";
-const anime = (animeBase as any).default || animeBase;
+import { animate as anime } from "animejs";
 
 const AnimeUserProfileIcon = ({ name }: { name: string }) => {
   const elRef = useRef<HTMLDivElement>(null);
 
   const handleEnter = () => {
-    anime({
-      targets: elRef.current,
+    anime(elRef.current!, {
       scale: 1.15,
       rotate: "1turn",
       duration: 800,
@@ -34,8 +32,7 @@ const AnimeUserProfileIcon = ({ name }: { name: string }) => {
   };
 
   const handleLeave = () => {
-    anime({
-      targets: elRef.current,
+    anime(elRef.current!, {
       scale: 1,
       rotate: "0turn",
       duration: 600,
