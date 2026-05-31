@@ -1,6 +1,7 @@
 import { AppProvider, useApp } from "./context/AppContext";
 import { Navbar } from "./components/Navbar";
 import { AuthScreen } from "./components/AuthScreen";
+import { AdminAuthScreen } from "./components/AdminAuthScreen";
 import { AdminDashboard } from "./components/AdminDashboard";
 import { SellerDashboard } from "./components/SellerDashboard";
 import { BuyerDashboard } from "./components/BuyerDashboard";
@@ -37,9 +38,16 @@ function DashboardSwitch() {
 
 function MainAppLayout() {
   const { currentUser } = useApp();
+  const isAdminRoute = window.location.pathname === "/admin";
 
-  if (!currentUser) {
-    return <AuthScreen />;
+  if (isAdminRoute) {
+    if (!currentUser || currentUser.role !== "admin") {
+      return <AdminAuthScreen />;
+    }
+  } else {
+    if (!currentUser) {
+      return <AuthScreen />;
+    }
   }
 
   return (

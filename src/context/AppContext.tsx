@@ -25,12 +25,13 @@ interface AppContextType {
   notifications: Notification[];
   theme: "light" | "dark";
   toggleTheme: () => void;
-  login: (email: string, pass: string) => Promise<{ success: boolean; message: string }>;
-  googleLogin: (credential: string) => Promise<{ success: boolean; message: string }>;
+  login: (email: string, pass: string, isAdminForm?: boolean) => Promise<{ success: boolean; message: string }>;
+  googleLogin: (credential: string, isAdminForm?: boolean) => Promise<{ success: boolean; message: string }>;
   register: (
     name: string,
     email: string,
     pass: string,
+    isAdminForm?: boolean,
   ) => Promise<{ success: boolean; message: string }>;
   logout: () => void;
   toggleCategory: () => void;
@@ -201,12 +202,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const login = async (
     email: string,
     pass: string,
+    isAdminForm?: boolean,
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, pass }),
+        body: JSON.stringify({ email, pass, isAdminForm }),
       });
 
       const data = await res.json();
@@ -232,12 +234,13 @@ export function AppProvider({ children }: { children: ReactNode }) {
     name: string,
     email: string,
     pass: string,
+    isAdminForm?: boolean,
   ): Promise<{ success: boolean; message: string }> => {
     try {
       const res = await fetch("/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, pass }),
+        body: JSON.stringify({ name, email, pass, isAdminForm }),
       });
 
       const data = await res.json();
@@ -259,12 +262,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const googleLogin = async (credential: string): Promise<{ success: boolean; message: string }> => {
+  const googleLogin = async (credential: string, isAdminForm?: boolean): Promise<{ success: boolean; message: string }> => {
     try {
       const res = await fetch("/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ credential }),
+        body: JSON.stringify({ credential, isAdminForm }),
       });
 
       const data = await res.json();

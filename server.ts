@@ -233,13 +233,13 @@ app.get("/api/notifications", (req, res) => {
 
 // POST /api/auth/login
 app.post("/api/auth/login", (req, res) => {
-  const { email, pass } = req.body;
+  const { email, pass, isAdminForm } = req.body;
   if (!email) {
     return res.status(400).json({ success: false, message: "Email is required" });
   }
 
   const cleanEmail = email.toLowerCase().trim();
-  const isAdminAccount = cleanEmail === ADMIN_EMAIL && pass === ADMIN_PASSWORD;
+  const isAdminCredentials = cleanEmail === ADMIN_EMAIL && pass === ADMIN_PASSWORD;
 
   const db = loadDB();
   let user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
@@ -249,8 +249,16 @@ app.post("/api/auth/login", (req, res) => {
       return res.status(401).json({ success: false, message: "Invalid credentials for admin entry." });
     }
 
-    if (isAdminAccount && user.role !== "admin") {
-      user.role = "admin";
+    if (isAdminCredentials) {
+      if (isAdminForm) {
+        user.role = "admin";
+        saveDB(db);
+        return res.json({ success: true, message: "Successfully signed in as Admin!", user });
+      } else {
+        // Return user role in session, don't modify persistence to keep admin status in db if desired, or override returned response
+        const userCopy = { ...user, role: "user" as const };
+        return res.json({ success: true, message: "Successfully signed in!", user: userCopy });
+      }
     }
 
     saveDB(db);
@@ -264,7 +272,7 @@ app.post("/api/auth/login", (req, res) => {
     id: `u_${Date.now()}`,
     email: cleanEmail,
     name: capitalizedName,
-    role: isAdminAccount ? "admin" : "user",
+    role: (isAdminCredentials && isAdminForm) ? "admin" : "user",
     category: "buyer",
     joinedDate: new Date().toISOString().split("T")[0],
   };
@@ -277,13 +285,13 @@ app.post("/api/auth/login", (req, res) => {
 
 // POST /api/auth/register
 app.post("/api/auth/register", (req, res) => {
-  const { name, email, pass } = req.body;
+  const { name, email, pass, isAdminForm } = req.body;
   if (!email) {
     return res.status(400).json({ success: false, message: "Email is required" });
   }
 
   const cleanEmail = email.toLowerCase().trim();
-  const isAdminAccount = cleanEmail === ADMIN_EMAIL && pass === ADMIN_PASSWORD;
+  const isAdminCredentials = cleanEmail === ADMIN_EMAIL && pass === ADMIN_PASSWORD;
 
   const db = loadDB();
   const existing = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
@@ -292,8 +300,16 @@ app.post("/api/auth/register", (req, res) => {
     if (cleanEmail === ADMIN_EMAIL && pass !== ADMIN_PASSWORD) {
       return res.status(401).json({ success: false, message: "Invalid credentials for admin entry." });
     }
-    if (isAdminAccount && existing.role !== "admin") {
-      existing.role = "admin";
+    if (isAdminCredentials) {
+      if (isAdminForm) {
+        existing.role = "admin";
+        saveDB(db);
+        return res.json({ success: true, message: "Account already exists, logged in as Admin.", user: existing });
+      } else {
+        const userCopy = { ...existing, role: "user" as const };
+        saveDB(db);
+        return res.json({ success: true, message: "Account already exists, logged in.", user: userCopy });
+      }
     }
     saveDB(db);
     return res.json({ success: true, message: "Account already exists, logged in.", user: existing });
@@ -303,7 +319,7 @@ app.post("/api/auth/register", (req, res) => {
     id: `u_${Date.now()}`,
     email: cleanEmail,
     name: name?.trim() || cleanEmail.split("@")[0],
-    role: isAdminAccount ? "admin" : "user",
+    role: (isAdminCredentials && isAdminForm) ? "admin" : "user",
     category: "buyer",
     joinedDate: new Date().toISOString().split("T")[0],
   };
@@ -316,7 +332,7 @@ app.post("/api/auth/register", (req, res) => {
 
 // POST /api/auth/google
 app.post("/api/auth/google", async (req, res) => {
-  const { credential } = req.body;
+  const { credential, isAdminForm } = req.body;
   if (!credential) {
     return res.status(400).json({ success: false, message: "Missing Google credential" });
   }
@@ -339,8 +355,15 @@ app.post("/api/auth/google", async (req, res) => {
     let user = db.users.find((u) => u.email.toLowerCase() === cleanEmail);
 
     if (user) {
-      if (isAdminAccount && user.role !== "admin") {
-        user.role = "admin";
+      if (isAdminAccount) {
+        if (isAdminForm) {
+          user.role = "admin";
+          saveDB(db);
+          return res.json({ success: true, message: "Successfully signed in with Google as Admin!", user });
+        } else {
+          const userCopy = { ...user, role: "user" as const };
+          return res.json({ success: true, message: "Successfully signed in with Google!", user: userCopy });
+        }
       }
       saveDB(db);
       return res.json({ success: true, message: "Successfully signed in with Google!", user });
@@ -351,7 +374,7 @@ app.post("/api/auth/google", async (req, res) => {
       id: `u_${Date.now()}`,
       email: cleanEmail,
       name: name,
-      role: isAdminAccount ? "admin" : "user",
+      role: (isAdminAccount && isAdminForm) ? "admin" : "user",
       category: "buyer",
       joinedDate: new Date().toISOString().split("T")[0],
     };
