@@ -14,6 +14,7 @@ import {
   UserRole,
   Notification,
   Order,
+  Project,
 } from "../types";
 
 interface AppContextType {
@@ -85,6 +86,9 @@ interface AppContextType {
   activeView: "dashboard" | "profile";
   setActiveView: (view: "dashboard" | "profile") => void;
   updateUserProfile: (fields: Partial<User>) => Promise<{ success: boolean; message: string }>;
+  projects: Project[];
+  addProject: (title: string, description: string, url: string) => Promise<{ success: boolean; message: string }>;
+  deleteProject: (id: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -125,6 +129,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [inquiries, setInquiries] = useState<Inquiry[]>(DEFAULT_INQUIRIES);
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>(DEFAULT_NOTIFICATIONS);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const stored = localStorage.getItem("melagent_current_v2");
@@ -152,6 +157,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (data.inquiries !== undefined) setInquiries(data.inquiries);
           if (data.orders !== undefined) setOrders(data.orders);
           if (data.notifications !== undefined) setNotifications(data.notifications);
+          if (data.projects !== undefined) setProjects(data.projects);
 
           // Keep local cached user in sync with remote fields
           const cached = localStorage.getItem("melagent_current_v2");
@@ -765,6 +771,42 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const addProject = async (
+    title: string,
+    description: string,
+    url: string,
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title, description, url }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setProjects((prev) => [...prev, data]);
+        return { success: true, message: "Project preview added successfully!" };
+      }
+      return { success: false, message: data.error || "Could not save project." };
+    } catch (err) {
+      console.error(err);
+      return { success: false, message: "Failed connection to backend." };
+    }
+  };
+
+  const deleteProject = async (id: string): Promise<void> => {
+    try {
+      const res = await fetch(`/api/projects/${id}`, {
+        method: "DELETE",
+      });
+      if (res.ok) {
+        setProjects((prev) => prev.filter((p) => p.id !== id));
+      }
+    } catch (err) {
+      console.error("Error deleting project:", err);
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -805,6 +847,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activeView,
         setActiveView,
         updateUserProfile,
+        projects,
+        addProject,
+        deleteProject,
       }}
     >
       {children}

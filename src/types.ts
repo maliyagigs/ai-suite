@@ -1,6 +1,13 @@
 export type UserRole = 'admin' | 'user';
 export type UserCategory = 'buyer' | 'seller';
 
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+}
+
 export interface SellerPortfolio {
   title: string;
   description: string;

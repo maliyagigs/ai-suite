@@ -115,12 +115,20 @@ interface Order {
   completedAt?: string;
 }
 
+export interface Project {
+  id: string;
+  title: string;
+  description: string;
+  url: string;
+}
+
 interface DatabaseSchema {
   users: User[];
   gigs: Gig[];
   inquiries: Inquiry[];
   orders: Order[];
   notifications: Notification[];
+  projects?: Project[];
 }
 
 const ALEX_PORTFOLIO: SellerPortfolio = {
@@ -163,14 +171,61 @@ const DEFAULT_NOTIFICATIONS: Notification[] = [
 
 const DEFAULT_ORDERS: Order[] = [];
 
+const DEFAULT_PROJECTS: Project[] = [
+  {
+    id: "p1",
+    title: "Cyber Pack Solution",
+    description: "Highly secure, multi-layer networking suite designed to audit and defend server clusters autonomously with state-of-the-art diagnostic interfaces.",
+    url: "https://janu-cyber-pack.onrender.com/"
+  },
+  {
+    id: "p2",
+    title: "Ceylonta Premium Tea",
+    description: "Elegant commercial hub bringing premium Grade-A Ceylon organic tea and artisan leaf blends to global buyers with rich storytelling aesthetics.",
+    url: "https://ceylonta.onrender.com"
+  },
+  {
+    id: "p3",
+    title: "Chem-Pro Assistant Solutions",
+    description: "Industrial-grade chemical formulation workspace managing complex compound ratios, testing logs, safety indices, and material ledger sheets.",
+    url: "https://chem-pro.appwrite.network/"
+  },
+  {
+    id: "p4",
+    title: "Cyber Shield Core Console",
+    description: "Enterprise defensive gateway monitoring live intrusion payloads, mapping endpoint traffic routes, and dispatching fast packet countermeasures.",
+    url: "https://janu-cyber-pack.onrender.com/"
+  },
+  {
+    id: "p5",
+    title: "Ceylon Harvest Trading Network",
+    description: "Global export syndicate ledger connecting local tea plantations with bulk distribution partners across active marine lanes.",
+    url: "https://ceylonta.onrender.com"
+  },
+  {
+    id: "p6",
+    title: "Advanced Formulation Lab Assistant",
+    description: "High-accuracy ratio predictor engine analyzing solvent density, temperature variables, and precipitate outcomes in a streamlined canvas interface.",
+    url: "https://chem-pro.appwrite.network/"
+  }
+];
+
 // Helper to load/save JSON DB
 function loadDB(): DatabaseSchema {
   try {
     if (fs.existsSync(DB_FILE)) {
       const raw = fs.readFileSync(DB_FILE, "utf-8");
       const db = JSON.parse(raw);
+      let needsSave = false;
       if (!db.orders) {
         db.orders = DEFAULT_ORDERS;
+        needsSave = true;
+      }
+      if (!db.projects || db.projects.length === 0) {
+        db.projects = DEFAULT_PROJECTS;
+        needsSave = true;
+      }
+      if (needsSave) {
         saveDB(db);
       }
       return db;
@@ -186,6 +241,7 @@ function loadDB(): DatabaseSchema {
     inquiries: DEFAULT_INQUIRIES,
     orders: DEFAULT_ORDERS,
     notifications: DEFAULT_NOTIFICATIONS,
+    projects: DEFAULT_PROJECTS
   };
   saveDB(initial);
   return initial;
@@ -205,6 +261,49 @@ function saveDB(data: DatabaseSchema) {
 app.get("/api/db", (req, res) => {
   const db = loadDB();
   res.json(db);
+});
+
+// GET /api/projects - Get all projects
+app.get("/api/projects", (req, res) => {
+  const db = loadDB();
+  res.json(db.projects || []);
+});
+
+// POST /api/projects - Add a new web creation project
+app.post("/api/projects", (req, res) => {
+  const { title, description, url } = req.body;
+  if (!title || !description || !url) {
+    return res.status(400).json({ error: "Title, description, and link URL are required." });
+  }
+
+  const db = loadDB();
+  if (!db.projects) {
+    db.projects = [];
+  }
+
+  const newProject: Project = {
+    id: `proj_${Date.now()}`,
+    title: title.trim(),
+    description: description.trim(),
+    url: url.trim()
+  };
+
+  db.projects.push(newProject);
+  saveDB(db);
+  res.status(201).json(newProject);
+});
+
+// DELETE /api/projects/:id - Delete a web creation project
+app.delete("/api/projects/:id", (req, res) => {
+  const { id } = req.params;
+  const db = loadDB();
+  if (!db.projects) {
+    db.projects = [];
+  }
+
+  db.projects = db.projects.filter((p) => p.id !== id);
+  saveDB(db);
+  res.json({ success: true });
 });
 
 // GET /api/gigs - Get all gigs

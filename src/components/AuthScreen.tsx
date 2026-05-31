@@ -393,7 +393,7 @@ function AnimatedCounter({ from, to, prefix = "", suffix = "", duration = 2 }: {
 }
 
 export function AuthScreen() {
-  const { login, register, googleLogin, theme } = useApp();
+  const { login, register, googleLogin, theme, projects } = useApp();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
 
   // Field States
@@ -754,93 +754,150 @@ export function AuthScreen() {
         </motion.div>
       </main>
 
-      {/* Dynamic Animated Charts Section */}
-      <section className="w-full relative z-10 bg-[#09090b] py-24 overflow-hidden">
+      {/* Website Creations Showroom Section */}
+      <section className="w-full relative z-10 bg-[#09090b] py-24 overflow-hidden border-t border-slate-900 border-b border-slate-950">
+        {/* Ambient background glows */}
+        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-indigo-600/5 blur-[160px] pointer-events-none" />
+        <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-emerald-600/5 blur-[140px] pointer-events-none" />
+
         <div className="max-w-7xl mx-auto px-6 relative">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 50 }}
-            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            viewport={{ once: false, amount: 0.15 }}
-            transition={{ duration: 0.8, type: "spring", bounce: 0.5 }}
-            className="w-full bg-slate-900 rounded-[2.5rem] p-8 md:p-14 shadow-2xl shadow-indigo-900/20 border border-slate-800 relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-gradient-to-tr from-[#050505] via-slate-900 to-indigo-950/40 pointer-events-none" />
-            
-            <div className="relative z-10 flex flex-col md:flex-row items-center gap-12">
-              <div className="w-full md:w-1/2">
+          <div className="text-center mb-16 max-w-3xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: false, amount: 0.1 }}
+              transition={{ duration: 0.6 }}
+            >
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-4 py-1.5 text-xs font-bold text-indigo-300 border border-indigo-500/20 mb-4 uppercase tracking-widest font-mono">
+                <Globe className="h-4 w-4" /> Custom Deployments Showcase
+              </span>
+              <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6 leading-tight">
+                Inspect My Live Website Creations
+              </h2>
+              <p className="text-slate-400 text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+                Experience high-performance, responsive systems deployed live. Scroll through each interactive mini monitor or expand to a full terminal environment to explore the user experience directly.
+              </p>
+            </motion.div>
+          </div>
+
+          {/* Grid Layout: 2 Columns on Desktop, 1 Column on Mobile */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+            {projects && projects.length > 0 ? (
+              projects.map((p, index) => (
                 <motion.div
-                  initial={{ opacity: 0, x: -50 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: false, amount: 0.15 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
+                  key={p.id}
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, amount: 0.05 }}
+                  transition={{ duration: 0.7, delay: index * 0.15, type: "spring", stiffness: 50 }}
+                  className="flex flex-col h-full bg-slate-950/45 p-5 md:p-6 rounded-[2rem] border border-slate-900 shadow-xl relative group transition"
                 >
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-500/10 px-4 py-1.5 text-xs font-bold text-indigo-300 border border-indigo-500/20 mb-6">
-                    <TrendingUp className="h-4 w-4" /> Hyper-Growth Platform
-                  </span>
-                  <h2 className="text-3xl md:text-5xl font-display font-bold text-white mb-6 leading-tight">
-                    Watch your revenue scale autonomously.
-                  </h2>
-                  <p className="text-slate-400 text-lg mb-8 max-w-md">
-                    Our platform's volume is exploding. By joining MelAgent today, you tap into a rapidly expanding buyer network designed to consistently deliver high-value contracts directly to you.
-                  </p>
-                  <div className="flex gap-4">
-                    <div className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700 w-1/2">
-                       <div className="text-sm font-semibold text-slate-400 mb-1">MoM Growth</div>
-                       <motion.div 
-                          initial={{ opacity: 0, scale: 0 }}
-                          whileInView={{ opacity: 1, scale: 1 }}
-                          viewport={{ once: false, amount: 0.15 }}
-                          transition={{ delay: 0.4, type: "spring" }}
-                          className="text-3xl font-bold text-emerald-400"
-                       >
-                         +240%
-                       </motion.div>
+                  {/* CSS Designed Sleek Mini Monitor */}
+                  <div className="w-full relative flex flex-col">
+                    {/* Bezel frame */}
+                    <div className="w-full bg-slate-800 rounded-t-2xl border-x-4 border-t-4 border-slate-700/90 shadow-2xl overflow-hidden aspect-[16/10] flex flex-col relative select-none">
+                      {/* Interactive Browser Top Bar */}
+                      <div className="h-7 w-full bg-slate-800 border-b border-slate-750 px-3 flex items-center gap-2 select-none shrink-0">
+                        {/* Red, Yellow, Green mock dots */}
+                        <div className="flex gap-1.5 shrink-0">
+                          <span className="w-2.5 h-2.5 rounded-full bg-rose-500/90 border border-rose-600" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500/90 border border-amber-600" />
+                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/90 border border-emerald-600" />
+                        </div>
+                        {/* URL Search bar */}
+                        <div className="flex-1 max-w-md mx-auto h-4.5 bg-slate-900/60 rounded px-2.5 flex items-center gap-1.5 min-w-0">
+                          <Globe className="h-3 w-3 text-indigo-400 shrink-0" />
+                          <span className="text-[10px] text-slate-450 font-mono truncate select-all">
+                            {p.url}
+                          </span>
+                        </div>
+                        {/* Open external button */}
+                        <a 
+                          href={p.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer" 
+                          className="text-slate-450 hover:text-indigo-400 active:scale-95 transition ml-auto flex items-center"
+                          title="Open Demo in Full View"
+                        >
+                          <ArrowRight className="h-3.5 w-3.5 -rotate-45" />
+                        </a>
+                      </div>
+
+                      {/* Display Screen */}
+                      <div className="flex-1 w-full bg-white relative overflow-hidden select-text">
+                        <iframe
+                          src={p.url}
+                          title={p.title}
+                          className="w-full h-full border-0 pointer-events-auto select-none"
+                          sandbox="allow-scripts allow-same-origin allow-popups"
+                          loading="lazy"
+                          referrerPolicy="no-referrer"
+                          style={{ minHeight: '100%', overflowY: 'auto' }}
+                        />
+
+                        {/* Interactive floating glass click link as iframe cover on hover */}
+                        <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none flex items-center justify-center">
+                          <a
+                            href={p.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="pointer-events-auto px-4 py-2 bg-slate-900/90 hover:bg-indigo-600 text-white rounded-xl border border-white/10 text-xs font-semibold flex items-center gap-1.5 shadow-xl transition-all duration-200 transform scale-95 group-hover:scale-100"
+                          >
+                            <Globe className="w-3.5 h-3.5 shrink-0" />
+                            Explore Live Instance
+                            <ArrowRight className="w-3 h-3 text-white/80 shrink-0" />
+                          </a>
+                        </div>
+                      </div>
                     </div>
-                    <div className="bg-slate-800/80 rounded-2xl p-4 border border-slate-700 w-1/2">
-                       <div className="text-sm font-semibold text-slate-400 mb-1">New Buyers</div>
-                       <motion.div 
-                          initial={{ opacity: 0, scale: 0 }}
-                          whileInView={{ opacity: 1, scale: 1 }}
-                          viewport={{ once: false, amount: 0.15 }}
-                          transition={{ delay: 0.5, type: "spring" }}
-                          className="text-3xl font-bold text-indigo-400"
-                       >
-                         10k+
-                       </motion.div>
+
+                    {/* Desktop screen base stand decorations */}
+                    <div className="w-full select-none pointer-events-none">
+                      {/* Chin Bar */}
+                      <div className="w-full bg-slate-700/90 h-3.5 rounded-b-xl border-t border-slate-600 flex items-center justify-center">
+                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400/80 shadow-md shadow-indigo-500 animate-pulse" />
+                      </div>
+                      {/* Neck support column */}
+                      <div className="mx-auto w-14 bg-gradient-to-b from-slate-600 to-slate-800 h-7 border-x border-b border-slate-900 shadow-inner" />
+                      {/* Desk Plate Base */}
+                      <div className="mx-auto w-28 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 h-2.5 rounded shadow-xl" />
+                    </div>
+                  </div>
+
+                  {/* Project metadata panel */}
+                  <div className="mt-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h4 className="text-lg font-bold font-display text-white group-hover:text-indigo-400 transition-colors">
+                        {p.title}
+                      </h4>
+                      <p className="text-slate-400 text-xs md:text-sm mt-2 leading-relaxed">
+                        {p.description}
+                      </p>
+                    </div>
+
+                    <div className="pt-5 border-t border-slate-900 flex items-center justify-between gap-4 mt-6">
+                      <span className="text-[10px] uppercase tracking-wider text-slate-500 font-mono font-bold">
+                        Node Deployment v1.4
+                      </span>
+                      <a
+                        href={p.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 font-bold text-xs text-indigo-400 hover:text-indigo-300 transition"
+                      >
+                        Launch Live Application
+                        <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
+                      </a>
                     </div>
                   </div>
                 </motion.div>
+              ))
+            ) : (
+              <div className="col-span-1 lg:col-span-2 py-24 border border-dashed border-slate-800 rounded-3xl text-center text-slate-500 max-w-sm mx-auto">
+                No creations found in search registry. Please login as Admin to seed some creations first.
               </div>
-
-              <div className="w-full md:w-1/2 h-[350px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#6366f1" stopOpacity={0.8}/>
-                        <stop offset="95%" stopColor="#6366f1" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                    <XAxis dataKey="name" stroke="#64748b" axisLine={false} tickLine={false} tick={{ fontSize: 12 }} dy={10} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#f8fafc' }}
-                      itemStyle={{ color: '#818cf8', fontWeight: 'bold' }}
-                    />
-                    <Area 
-                      type="monotone" 
-                      dataKey="revenue" 
-                      stroke="#818cf8" 
-                      strokeWidth={3}
-                      fillOpacity={1} 
-                      fill="url(#colorRevenue)" 
-                      animationDuration={2500}
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-          </motion.div>
+            )}
+          </div>
         </div>
       </section>
 

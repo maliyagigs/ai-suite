@@ -15,6 +15,8 @@ import {
   Send,
   CheckCircle2,
   X,
+  Plus,
+  Globe,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { animate as anime } from "animejs";
@@ -62,10 +64,32 @@ export function AdminDashboard() {
     sendNotification,
     approveSellerApplication,
     rejectSellerApplication,
+    projects,
+    addProject,
+    deleteProject,
   } = useApp();
   const [activeTab, setActiveTab] = useState<
-    "listings" | "users" | "inquiries" | "applications"
+    "listings" | "users" | "inquiries" | "applications" | "web_creations"
   >("listings");
+
+  // Web Creations form state
+  const [newProjTitle, setNewProjTitle] = useState("");
+  const [newProjDesc, setNewProjDesc] = useState("");
+  const [newProjUrl, setNewProjUrl] = useState("");
+  const [formFeedback, setFormFeedback] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleCreateProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProjTitle.trim() || !newProjDesc.trim() || !newProjUrl.trim()) return;
+    const res = await addProject(newProjTitle, newProjDesc, newProjUrl);
+    setFormFeedback(res);
+    if (res.success) {
+      setNewProjTitle("");
+      setNewProjDesc("");
+      setNewProjUrl("");
+    }
+    setTimeout(() => setFormFeedback(null), 3000);
+  };
 
   // Send Notification States
   const [selectedUserForNotif, setSelectedUserForNotif] = useState<any>(null);
@@ -188,10 +212,167 @@ export function AdminDashboard() {
           Seller Applications (
           {users.filter((u) => u.sellerStatus === "pending").length})
         </button>
+        <button
+          onClick={() => setActiveTab("web_creations")}
+          className={`pb-3 px-4 md:px-6 font-display font-bold text-xs md:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
+            activeTab === "web_creations"
+              ? "border-indigo-650 text-indigo-650 dark:border-indigo-400 dark:text-indigo-400"
+              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+          }`}
+        >
+          Web Creations ({projects.length})
+        </button>
       </div>
 
       {/* Main interactive lists */}
       <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-6 md:p-8 shadow-xl shadow-indigo-900/5 border border-slate-200/80 dark:border-slate-800 min-h-[350px]">
+        {/* TAB 5: WEB CREATIONS SHOWCASE MANAGEMENT */}
+        {activeTab === "web_creations" && (
+          <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100">
+            <div className="flex items-start md:items-center gap-2 text-slate-400 dark:text-slate-500 text-[11px] md:text-xs font-semibold uppercase tracking-wider">
+              <BadgeInfo className="h-4 w-4 shrink-0 mt-0.5 md:mt-0" />
+              <span>
+                Add or moderate live website showcase previews that render in mini monitors on the visitor landing page.
+              </span>
+            </div>
+
+            {/* Addition Form Card */}
+            <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider mb-4">
+                <Plus className="h-4 w-4 text-indigo-500" />
+                Add New Showcase Creation
+              </h3>
+              
+              <form onSubmit={handleCreateProject} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400">
+                    Project Website Title
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newProjTitle}
+                    onChange={(e) => setNewProjTitle(e.target.value)}
+                    placeholder="e.g., Ceylonta Premium Tea Hub"
+                    className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 outline-none focus:border-indigo-500 dark:text-white transition"
+                  />
+                </div>
+                
+                <div className="space-y-1">
+                  <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400">
+                    Live Demo Link URL (https://)
+                  </label>
+                  <input
+                    type="url"
+                    required
+                    value={newProjUrl}
+                    onChange={(e) => setNewProjUrl(e.target.value)}
+                    placeholder="e.g., https://ceylonta.onrender.com"
+                    className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 outline-none focus:border-indigo-500 dark:text-white transition"
+                  />
+                </div>
+
+                <div className="md:col-span-2 space-y-1">
+                  <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400">
+                    Short Description (Showcases tech-stack, value metrics, context)
+                  </label>
+                  <textarea
+                    required
+                    rows={2}
+                    value={newProjDesc}
+                    onChange={(e) => setNewProjDesc(e.target.value)}
+                    placeholder="Describe the architecture, features, and target business value of this website..."
+                    className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 outline-none focus:border-indigo-500 dark:text-white resize-none transition"
+                  />
+                </div>
+
+                <div className="md:col-span-2 flex items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-850">
+                  {formFeedback && (
+                    <span className={`text-xs font-bold ${formFeedback.success ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {formFeedback.message}
+                    </span>
+                  )}
+                  <div className="flex-1" />
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 shadow-lg shadow-indigo-500/10 active:scale-95 transition cursor-pointer"
+                  >
+                    Publish Website Creation
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            {/* Current Creations Registry Table */}
+            <div className="space-y-4">
+              <h4 className="text-[10px] uppercase font-bold text-slate-400 tracking-widest">
+                Active Creations Archive ({projects.length})
+              </h4>
+              
+              {projects.length === 0 ? (
+                <div className="py-12 border border-dashed border-slate-200 dark:border-slate-800 rounded-2xl text-center text-xs text-slate-400">
+                  No showcase projects active in database. Add one above to seed registry.
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="border-b border-slate-150 dark:border-slate-800 text-slate-400 uppercase font-bold text-[10px]">
+                        <th className="pb-3 pr-4">Website Details</th>
+                        <th className="pb-3 px-4">Live URL Address</th>
+                        <th className="pb-3 pl-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <AnimatePresence>
+                        {projects.map((p) => (
+                          <motion.tr
+                            key={p.id}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0, x: -10 }}
+                            className="border-b border-slate-100 dark:border-slate-800/50 last:border-0 hover:bg-slate-50/50 dark:hover:bg-slate-800/10 transition"
+                          >
+                            <td className="py-4 pr-4 max-w-sm">
+                              <div>
+                                <span className="font-bold text-slate-800 dark:text-white block">
+                                  {p.title}
+                                </span>
+                                <span className="text-[10px] text-slate-500 line-clamp-2 mt-0.5">
+                                  {p.description}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="py-4 px-4 font-mono text-[10px] text-indigo-550 dark:text-indigo-400">
+                              <a href={p.url} target="_blank" rel="noopener noreferrer" className="hover:underline flex items-center gap-1">
+                                <Globe className="h-3.5 w-3.5 shrink-0" />
+                                {p.url}
+                              </a>
+                            </td>
+                            <td className="py-4 pl-4 text-right">
+                              <button
+                                onClick={async () => {
+                                  if (confirm(`Are you sure you want to delete ${p.title}?`)) {
+                                    await deleteProject(p.id);
+                                  }
+                                }}
+                                className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-rose-600 dark:hover:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
+                                title="Delete Web Showcase"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </button>
+                            </td>
+                          </motion.tr>
+                        ))}
+                      </AnimatePresence>
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* TAB 4: SELLER APPLICATIONS */}
         {activeTab === "applications" && (
           <div className="space-y-4 md:space-y-6">
