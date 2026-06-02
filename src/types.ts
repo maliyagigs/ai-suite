@@ -8,6 +8,11 @@ export interface Project {
   url: string;
 }
 
+export interface SiteSettings {
+  paidToSellersCount: number;
+  activeBuyersCount: number;
+}
+
 export interface SellerPortfolio {
   title: string;
   description: string;

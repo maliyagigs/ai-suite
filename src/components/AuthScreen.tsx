@@ -469,7 +469,8 @@ function AnimatedHeroHeading() {
 }
 
 export function AuthScreen() {
-  const { login, register, googleLogin, theme, projects } = useApp();
+  const { login, register, googleLogin, theme, projects, settings } = useApp();
+  const { paidToSellersCount = 2, activeBuyersCount = 10 } = settings || {};
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
 
   // Field States
@@ -702,14 +703,14 @@ export function AuthScreen() {
           <motion.div variants={itemVariants} className="mt-12 pt-10 border-t border-slate-800 flex items-center gap-8 w-full">
             <div>
               <div className="text-2xl font-bold text-white tracking-tight">
-                <AnimatedCounter from={0} to={2} prefix="$" suffix="M+" duration={2} />
+                <AnimatedCounter from={0} to={paidToSellersCount} prefix="$" suffix="M+" duration={2} />
               </div>
-              <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1">Paid to sellers</div>
+              <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1 font-sans">Paid to sellers</div>
             </div>
             <div className="w-px h-10 bg-slate-800" />
             <div>
               <div className="text-2xl font-bold text-white tracking-tight">
-                <AnimatedCounter from={0} to={10} suffix="k+" duration={2} />
+                <AnimatedCounter from={0} to={activeBuyersCount} suffix="k+" duration={2} />
               </div>
               <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest mt-1 font-mono">Active Buyers</div>
             </div>
@@ -1014,7 +1015,10 @@ export function AuthScreen() {
 
       {/* Scrollable Feature Section */}
       <section className="w-full relative z-10 bg-slate-950 py-24 sm:py-32 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-6">
+        {/* Dynamic Typewriter Newsletter Background Animation */}
+        <TypewriterBackground />
+        
+        <div className="max-w-7xl mx-auto px-6 relative z-10">
           <motion.div 
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -1333,6 +1337,91 @@ export function AuthScreen() {
       {/* Footer on landing page */}
       <Footer />
     </div>
+  );
+}
+
+function TypewriterBackground() {
+  const headlines = [
+    "MELAGENT NEWSLETTER: Escrow Volume reaches record high $2.4M under secure contracts...",
+    "TALENT REPORT: Top verified agents deployed 142 integrated full-stack solutions globally...",
+    "CONTRACT INITIATED: Austin startup commits custom backend microservice deployment audit...",
+    "PRODUCT DISPATCH: Instant buyer secure clearance confirms payout in 48 milliseconds...",
+    "TELEMETRY LOGS: Core signal calibrated 100% stable across transpacific link routes...",
+    "DECENTRALIZED WORKSPACE: Peer reviewed Rust, Go, and React veterans listed active today..."
+  ];
+
+  return (
+    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03] dark:opacity-[0.05] select-none font-mono text-[9px] md:text-xs leading-relaxed z-0">
+      {/* Grid of scrolling/typing rows */}
+      <div className="absolute -inset-10 flex flex-col justify-around gap-2 p-4">
+        {Array.from({ length: 12 }).map((_, rIdx) => {
+          const headline = headlines[rIdx % headlines.length];
+          return (
+            <div 
+              key={rIdx} 
+              className="whitespace-nowrap flex items-center gap-1 text-emerald-400 font-bold"
+              style={{
+                transform: `translateX(${(rIdx % 2 === 0 ? 1 : -1) * (rIdx * 10)}px)`,
+                opacity: 1 - (Math.abs(rIdx - 6) / 8)
+              }}
+            >
+              <TypingText text={headline} delay={rIdx * 400} />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function TypingText({ text, delay }: { text: string; delay: number }) {
+  const [displayText, setDisplayText] = useState("");
+  const [phase, setPhase] = useState<"typing" | "pause" | "deleting">("typing");
+  const [charIndex, setCharIndex] = useState(0);
+
+  useEffect(() => {
+    let timer: any;
+    
+    const startTimeout = setTimeout(() => {
+      const run = () => {
+        if (phase === "typing") {
+          if (charIndex < text.length) {
+            setDisplayText(text.slice(0, charIndex + 1));
+            setCharIndex(prev => prev + 1);
+            timer = setTimeout(run, 50 + Math.random() * 30);
+          } else {
+            setPhase("pause");
+            timer = setTimeout(run, 2500);
+          }
+        } else if (phase === "pause") {
+          setPhase("deleting");
+          timer = setTimeout(run, 500);
+        } else if (phase === "deleting") {
+          if (charIndex > 0) {
+            setDisplayText(text.slice(0, charIndex - 1));
+            setCharIndex(prev => prev - 1);
+            timer = setTimeout(run, 15);
+          } else {
+            setPhase("typing");
+            timer = setTimeout(run, 800);
+          }
+        }
+      };
+      
+      run();
+    }, delay);
+
+    return () => {
+      clearTimeout(startTimeout);
+      clearTimeout(timer);
+    };
+  }, [phase, charIndex, text, delay]);
+
+  return (
+    <span>
+      {displayText}
+      <span className="inline-block w-1 h-3.5 bg-emerald-400/90 ml-0.5 animate-pulse shrink-0">|</span>
+    </span>
   );
 }
 

@@ -15,6 +15,7 @@ import {
   Notification,
   Order,
   Project,
+  SiteSettings,
 } from "../types";
 
 interface AppContextType {
@@ -89,6 +90,8 @@ interface AppContextType {
   projects: Project[];
   addProject: (title: string, description: string, url: string) => Promise<{ success: boolean; message: string }>;
   deleteProject: (id: string) => Promise<void>;
+  settings: SiteSettings;
+  updateSettings: (settings: Partial<SiteSettings>) => Promise<{ success: boolean; message: string }>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -130,6 +133,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>(DEFAULT_NOTIFICATIONS);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [settings, setSettings] = useState<SiteSettings>({
+    paidToSellersCount: 2,
+    activeBuyersCount: 10
+  });
 
   const [currentUser, setCurrentUser] = useState<User | null>(() => {
     const stored = localStorage.getItem("melagent_current_v2");
@@ -158,6 +165,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           if (data.orders !== undefined) setOrders(data.orders);
           if (data.notifications !== undefined) setNotifications(data.notifications);
           if (data.projects !== undefined) setProjects(data.projects);
+          if (data.settings !== undefined) setSettings(data.settings);
 
           // Keep local cached user in sync with remote fields
           const cached = localStorage.getItem("melagent_current_v2");
@@ -807,6 +815,32 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
   };
 
+  const updateSettings = async (
+    updates: Partial<SiteSettings>
+  ): Promise<{ success: boolean; message: string }> => {
+    try {
+      const payload = {
+        paidToSellersCount: updates.paidToSellersCount !== undefined ? Number(updates.paidToSellersCount) : settings.paidToSellersCount,
+        activeBuyersCount: updates.activeBuyersCount !== undefined ? Number(updates.activeBuyersCount) : settings.activeBuyersCount
+      };
+
+      const res = await fetch("/api/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setSettings(data.settings);
+        return { success: true, message: "Platform stats updated successfully!" };
+      }
+      return { success: false, message: data.error || "Could not save platform stats." };
+    } catch (err) {
+      console.error(err);
+      return { success: false, message: "Failed connection to backend." };
+    }
+  };
+
   return (
     <AppContext.Provider
       value={{
@@ -850,6 +884,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         projects,
         addProject,
         deleteProject,
+        settings,
+        updateSettings,
       }}
     >
       {children}

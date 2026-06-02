@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useApp } from "../context/AppContext";
 import {
   Shield,
@@ -17,6 +17,7 @@ import {
   X,
   Plus,
   Globe,
+  Settings,
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { animate as anime } from "animejs";
@@ -67,25 +68,61 @@ export function AdminDashboard() {
     projects,
     addProject,
     deleteProject,
+    settings,
+    updateSettings,
   } = useApp();
   const [activeTab, setActiveTab] = useState<
-    "listings" | "users" | "inquiries" | "applications" | "web_creations"
+    "listings" | "users" | "inquiries" | "applications" | "web_creations" | "platform_settings"
   >("listings");
 
+  // Platform stats state
+  const [paidToSellersInput, setPaidToSellersInput] = useState(settings?.paidToSellersCount?.toString() || "2");
+  const [activeBuyersInput, setActiveBuyersInput] = useState(settings?.activeBuyersCount?.toString() || "10");
+  const [statsFeedback, setStatsFeedback] = useState<{ success: boolean; message: string } | null>(null);
+
+  // Keep inputs in sync if settings changes
+  useEffect(() => {
+    if (settings) {
+      setPaidToSellersInput(settings.paidToSellersCount.toString());
+      setActiveBuyersInput(settings.activeBuyersCount.toString());
+    }
+  }, [settings]);
+
+  const handleUpdateStats = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const res = await updateSettings({
+      paidToSellersCount: Number(paidToSellersInput),
+      activeBuyersCount: Number(activeBuyersInput)
+    });
+    setStatsFeedback(res);
+    setTimeout(() => setStatsFeedback(null), 3000);
+  };
+
   // Web Creations form state
-  const [newProjTitle, setNewProjTitle] = useState("");
-  const [newProjDesc, setNewProjDesc] = useState("");
   const [newProjUrl, setNewProjUrl] = useState("");
   const [formFeedback, setFormFeedback] = useState<{ success: boolean; message: string } | null>(null);
 
   const handleCreateProject = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newProjTitle.trim() || !newProjDesc.trim() || !newProjUrl.trim()) return;
-    const res = await addProject(newProjTitle, newProjDesc, newProjUrl);
+    if (!newProjUrl.trim()) return;
+
+    // Auto-generate title and description from URL
+    let autoTitle = "";
+    try {
+      const parsedUrl = new URL(newProjUrl.startsWith("http") ? newProjUrl : `https://${newProjUrl}`);
+      const hostname = parsedUrl.hostname.replace("www.", "");
+      const firstPart = hostname.split(".")[0];
+      autoTitle = firstPart.charAt(0).toUpperCase() + firstPart.slice(1);
+      autoTitle = autoTitle.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
+    } catch {
+      autoTitle = "Showcase Website";
+    }
+
+    const autoDesc = "Live client demo showcasing modern full-stack integrations and tailored digital client commerce flows.";
+
+    const res = await addProject(autoTitle, autoDesc, newProjUrl);
     setFormFeedback(res);
     if (res.success) {
-      setNewProjTitle("");
-      setNewProjDesc("");
       setNewProjUrl("");
     }
     setTimeout(() => setFormFeedback(null), 3000);
@@ -222,6 +259,16 @@ export function AdminDashboard() {
         >
           Web Creations ({projects.length})
         </button>
+        <button
+          onClick={() => setActiveTab("platform_settings")}
+          className={`pb-3 px-4 md:px-6 font-display font-bold text-xs md:text-sm border-b-2 transition-all cursor-pointer whitespace-nowrap shrink-0 flex gap-2 items-center ${
+            activeTab === "platform_settings"
+              ? "border-indigo-650 text-indigo-650 dark:border-indigo-400 dark:text-indigo-400"
+              : "border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200"
+          }`}
+        >
+          Platform Stats
+        </button>
       </div>
 
       {/* Main interactive lists */}
@@ -237,27 +284,13 @@ export function AdminDashboard() {
             </div>
 
             {/* Addition Form Card */}
-            <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm">
+            <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm font-sans">
               <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider mb-4">
                 <Plus className="h-4 w-4 text-indigo-500" />
                 Add New Showcase Creation
               </h3>
               
-              <form onSubmit={handleCreateProject} className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400">
-                    Project Website Title
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={newProjTitle}
-                    onChange={(e) => setNewProjTitle(e.target.value)}
-                    placeholder="e.g., Ceylonta Premium Tea Hub"
-                    className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 outline-none focus:border-indigo-500 dark:text-white transition"
-                  />
-                </div>
-                
+              <form onSubmit={handleCreateProject} className="space-y-4">
                 <div className="space-y-1">
                   <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400">
                     Live Demo Link URL (https://)
@@ -272,21 +305,7 @@ export function AdminDashboard() {
                   />
                 </div>
 
-                <div className="md:col-span-2 space-y-1">
-                  <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400">
-                    Short Description (Showcases tech-stack, value metrics, context)
-                  </label>
-                  <textarea
-                    required
-                    rows={2}
-                    value={newProjDesc}
-                    onChange={(e) => setNewProjDesc(e.target.value)}
-                    placeholder="Describe the architecture, features, and target business value of this website..."
-                    className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 outline-none focus:border-indigo-500 dark:text-white resize-none transition"
-                  />
-                </div>
-
-                <div className="md:col-span-2 flex items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-850">
+                <div className="flex items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-850">
                   {formFeedback && (
                     <span className={`text-xs font-bold ${formFeedback.success ? 'text-emerald-500' : 'text-rose-500'}`}>
                       {formFeedback.message}
@@ -369,6 +388,72 @@ export function AdminDashboard() {
                   </table>
                 </div>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* TAB 6: PLATFORM STATS MANAGEMENT */}
+        {activeTab === "platform_settings" && (
+          <div className="space-y-8 animate-fade-in text-slate-900 dark:text-slate-100 font-sans">
+            <div className="flex items-start md:items-center gap-2 text-slate-400 dark:text-slate-500 text-[11px] md:text-xs font-semibold uppercase tracking-wider">
+              <BadgeInfo className="h-4 w-4 shrink-0 mt-0.5 md:mt-0" />
+              <span>
+                Configure global landing page metrics dynamically. Changes will animate live for all visitors immediately.
+              </span>
+            </div>
+
+            <div className="bg-slate-50 dark:bg-slate-950/40 border border-slate-150 dark:border-slate-800/80 rounded-3xl p-6 shadow-sm max-w-xl">
+              <h3 className="text-sm font-bold text-slate-800 dark:text-slate-100 flex items-center gap-1.5 uppercase tracking-wider mb-4">
+                <Settings className="h-4 w-4 text-indigo-500" />
+                Landing Page Stats Settings
+              </h3>
+              
+              <form onSubmit={handleUpdateStats} className="space-y-4">
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-450 dark:text-slate-400">
+                    Paid To Sellers count (Animated Target value, e.g. 2 for $2M+)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={paidToSellersInput}
+                    onChange={(e) => setPaidToSellersInput(e.target.value)}
+                    placeholder="e.g. 2"
+                    className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 outline-none focus:border-indigo-500 dark:text-white transition animate-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-450 dark:text-slate-400">
+                    Active Buyers count (Animated Target value, e.g. 10 for 10k+)
+                  </label>
+                  <input
+                    type="number"
+                    required
+                    min={0}
+                    value={activeBuyersInput}
+                    onChange={(e) => setActiveBuyersInput(e.target.value)}
+                    placeholder="e.g. 10"
+                    className="w-full text-xs rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-3.5 py-2.5 outline-none focus:border-indigo-500 dark:text-white transition animate-none"
+                  />
+                </div>
+
+                <div className="flex items-center justify-between gap-4 pt-2 border-t border-slate-100 dark:border-slate-850">
+                  {statsFeedback && (
+                    <span className={`text-xs font-bold ${statsFeedback.success ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {statsFeedback.message}
+                    </span>
+                  )}
+                  <div className="flex-1" />
+                  <button
+                    type="submit"
+                    className="px-6 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 shadow-lg shadow-indigo-500/10 active:scale-95 transition cursor-pointer font-sans"
+                  >
+                    Save Changes
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}

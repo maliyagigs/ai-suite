@@ -122,6 +122,11 @@ export interface Project {
   url: string;
 }
 
+export interface SiteSettings {
+  paidToSellersCount: number;
+  activeBuyersCount: number;
+}
+
 interface DatabaseSchema {
   users: User[];
   gigs: Gig[];
@@ -129,6 +134,7 @@ interface DatabaseSchema {
   orders: Order[];
   notifications: Notification[];
   projects?: Project[];
+  settings?: SiteSettings;
 }
 
 const ALEX_PORTFOLIO: SellerPortfolio = {
@@ -225,6 +231,10 @@ function loadDB(): DatabaseSchema {
         db.projects = DEFAULT_PROJECTS;
         needsSave = true;
       }
+      if (!db.settings) {
+        db.settings = { paidToSellersCount: 2, activeBuyersCount: 10 };
+        needsSave = true;
+      }
       if (needsSave) {
         saveDB(db);
       }
@@ -241,7 +251,8 @@ function loadDB(): DatabaseSchema {
     inquiries: DEFAULT_INQUIRIES,
     orders: DEFAULT_ORDERS,
     notifications: DEFAULT_NOTIFICATIONS,
-    projects: DEFAULT_PROJECTS
+    projects: DEFAULT_PROJECTS,
+    settings: { paidToSellersCount: 2, activeBuyersCount: 10 }
   };
   saveDB(initial);
   return initial;
@@ -304,6 +315,18 @@ app.delete("/api/projects/:id", (req, res) => {
   db.projects = db.projects.filter((p) => p.id !== id);
   saveDB(db);
   res.json({ success: true });
+});
+
+// POST /api/settings - Update site settings (Admin only)
+app.post("/api/settings", (req, res) => {
+  const { paidToSellersCount, activeBuyersCount } = req.body;
+  const db = loadDB();
+  db.settings = {
+    paidToSellersCount: paidToSellersCount !== undefined ? Number(paidToSellersCount) : (db.settings?.paidToSellersCount ?? 2),
+    activeBuyersCount: activeBuyersCount !== undefined ? Number(activeBuyersCount) : (db.settings?.activeBuyersCount ?? 10)
+  };
+  saveDB(db);
+  res.json({ success: true, settings: db.settings });
 });
 
 // GET /api/gigs - Get all gigs
