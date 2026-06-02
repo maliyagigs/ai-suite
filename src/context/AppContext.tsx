@@ -356,8 +356,21 @@ export function AppProvider({ children }: { children: ReactNode }) {
             setSettings(settingsRes.documents[0] as any);
           }
         }
-      } catch (err) {
-        console.error("Appwrite DB synchronization error. Check .env config.", err);
+      } catch (err: any) {
+        if (err.message === "Failed to fetch") {
+          console.error(
+            "Appwrite DB synchronization error: 'Failed to fetch'.\n\n" +
+            "This is a browser-level block (CORS or AdBlocker).\n" +
+            "1. Turn off any Adblockers (Brave Shields, uBlock Origin).\n" +
+            "2. In Appwrite Dashboard -> Platforms -> Add Web App.\n" +
+            "   IMPORTANT: The 'Hostname' should NOT include 'https://'.\n" +
+            "   Add this exact hostname: " + window.location.hostname
+          );
+        } else if (err.code === 401 || err.code === 403) {
+          console.error("Appwrite DB synchronization error: Permissions. Please go to your Database collections -> Settings -> Permissions, and add an 'Any' role with 'Read' enabled.", err);
+        } else {
+          console.error("Appwrite DB synchronization error. Check collections.", err);
+        }
       }
     };
 
