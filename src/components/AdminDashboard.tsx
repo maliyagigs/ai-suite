@@ -290,7 +290,7 @@ export function AdminDashboard() {
                 Add New Showcase Creation
               </h3>
               
-              <div className="space-y-4">
+              <form onSubmit={handleCreateProject} className="space-y-4">
                 <div className="space-y-1">
                   <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400">
                     Live Demo Link URL (https://)
@@ -313,14 +313,13 @@ export function AdminDashboard() {
                   )}
                   <div className="flex-1" />
                   <button
-                    type="button"
-                    onClick={(e) => handleCreateProject(e as any)}
+                    type="submit"
                     className="px-6 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 shadow-lg shadow-indigo-500/10 active:scale-95 transition cursor-pointer"
                   >
                     Publish Website Creation
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
 
             {/* Current Creations Registry Table */}
@@ -407,7 +406,7 @@ export function AdminDashboard() {
                 Landing Page Stats Settings
               </h3>
               
-              <div className="space-y-4">
+              <form onSubmit={handleUpdateStats} className="space-y-4">
                 <div className="space-y-2">
                   <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-450 dark:text-slate-400">
                     Paid To Sellers count (Animated Target value, e.g. 2 for $2M+)
@@ -446,14 +445,13 @@ export function AdminDashboard() {
                   )}
                   <div className="flex-1" />
                   <button
-                    type="button"
-                    onClick={(e) => handleUpdateStats(e as any)}
+                    type="submit"
                     className="px-6 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 shadow-lg shadow-indigo-500/10 active:scale-95 transition cursor-pointer font-sans"
                   >
                     Save Changes
                   </button>
                 </div>
-              </div>
+              </form>
             </div>
           </div>
         )}
