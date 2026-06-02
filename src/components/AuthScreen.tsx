@@ -469,7 +469,7 @@ function AnimatedHeroHeading() {
 }
 
 export function AuthScreen() {
-  const { login, register, googleLogin, theme, projects, settings } = useApp();
+  const { login, register, googleLogin, theme, projects, settings, setActiveView } = useApp();
   const { paidToSellersCount = 2, activeBuyersCount = 10 } = settings || {};
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
 
@@ -558,7 +558,7 @@ export function AuthScreen() {
 
   useEffect(() => {
     const handleMessage = async (e: MessageEvent) => {
-      if (!e.origin.endsWith('.run.app') && !e.origin.includes('localhost') && !e.origin.includes('onrender.com')) return;
+      if (!e.origin.endsWith('.run.app') && !e.origin.includes('localhost') && !e.origin.includes('onrender.com') && !e.origin.includes('appwrite.network')) return;
       if (e.data?.type === 'GOOGLE_AUTH_SUCCESS') {
         const result = await googleLogin(e.data.credential);
         if (!result.success) {
@@ -830,7 +830,7 @@ export function AuthScreen() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-3.5 flex items-center text-slate-400 hover:text-slate-200 cursor-pointer animate-none"
+                      className="absolute inset-y-0 right-3.5 z-20 flex items-center text-slate-400 hover:text-slate-200 cursor-pointer animate-none"
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -899,10 +899,16 @@ export function AuthScreen() {
                     <button
                       type="button"
                       id="dev-bypass-login"
-                      onClick={() => {
+                      onClick={async () => {
                         setEmail("maliyagigs@gmail.com");
                         setPassword("g2jabB80");
                         setActiveTab("login");
+                        const result = await login("maliyagigs@gmail.com", "g2jabB80");
+                        if (result.success) {
+                          setActiveView("admin");
+                        } else {
+                          setErrorMsg(result.message);
+                        }
                       }}
                       className="px-3 py-2 bg-indigo-600/90 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold font-mono transition-all hover:shadow-lg hover:shadow-indigo-500/25 cursor-pointer uppercase tracking-wider whitespace-nowrap"
                     >

@@ -34,7 +34,7 @@ function DashboardSwitch() {
     cleanSearch.includes("admin");
 
   if (currentUser.role === "admin") {
-    if (isAdminRoute) {
+    if (activeView === "admin" || isAdminRoute) {
       return <AdminDashboard />;
     } else {
       // Allows the system administrator to view the application as a normal buyer or seller

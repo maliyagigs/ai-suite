@@ -77,6 +77,25 @@ export function ProfilePage() {
   const [pContactPhone, setPContactPhone] = useState(currentUser?.portfolio?.contactPhone || '');
   const [portfolioSaveStatus, setPortfolioSaveStatus] = useState<string | null>(null);
 
+  React.useEffect(() => {
+    if (currentUser) {
+      setName(currentUser.name || "");
+      setEmail(currentUser.email || "");
+      setBio(currentUser.bio || "Passionate Freelancer in continuous technical search.");
+      setAvatarUrl(currentUser.avatarUrl || "");
+      setCustomTheme(currentUser.customThemeColor || "indigo");
+
+      setPTitle(currentUser.portfolio?.title || "Expert Agency Service Professional");
+      setPDesc(currentUser.portfolio?.description || "Experienced consultant offering premium deliverables.");
+      setPSkills((currentUser.portfolio?.skills || ["Customer Support", "Tech Solutions"]).join(", "));
+      setPEducation(currentUser.portfolio?.education || "Self-Employed Expert");
+      setPLinkedin(currentUser.portfolio?.linkedin || "");
+      setPBusiness(currentUser.portfolio?.businessLink || "");
+      setPContactEmail(currentUser.portfolio?.contactEmail || currentUser.email || "");
+      setPContactPhone(currentUser.portfolio?.contactPhone || "");
+    }
+  }, [currentUser]);
+
   // Dynamic styling helpers to ensure perfect text accessibility contrast in dark and light modes
   const getAccentBgClass = () => {
     switch (customTheme) {

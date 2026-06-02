@@ -84,8 +84,8 @@ interface AppContextType {
   deleteInquiry: (id: string) => void;
   respondToInquiry: (id: string, message: string) => void;
   rateGig: (gigId: string, rating: number) => void;
-  activeView: "dashboard" | "profile";
-  setActiveView: (view: "dashboard" | "profile") => void;
+  activeView: "dashboard" | "profile" | "admin";
+  setActiveView: (view: "dashboard" | "profile" | "admin") => void;
   updateUserProfile: (fields: Partial<User>) => Promise<{ success: boolean; message: string }>;
   projects: Project[];
   addProject: (title: string, description: string, url: string) => Promise<{ success: boolean; message: string }>;
@@ -108,11 +108,142 @@ const ALEX_PORTFOLIO: SellerPortfolio = {
   contactPhone: "",
 };
 
-const DEFAULT_USERS: User[] = [];
+const DEFAULT_USERS: User[] = [
+  {
+    id: "u_admin",
+    email: "maliyagigs@gmail.com",
+    name: "Maliya Admin",
+    role: "admin",
+    category: "buyer",
+    joinedDate: "2026-01-01",
+  },
+  {
+    id: "u_alex",
+    email: "alex@example.com",
+    name: "Alex Rivera",
+    role: "user",
+    category: "seller",
+    joinedDate: "2026-02-01",
+    sellerStatus: "approved",
+    bio: "Passionate Full-Stack React Developer with 6+ years of commercial experience building SaaS platforms.",
+    avatarUrl: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop",
+    portfolio: {
+      title: "Senior Full Stack Architect",
+      description: "Providing premium web applications using React, Node.js, and Cloud Infrastructure.",
+      skills: ["React", "TypeScript", "Tailwind CSS", "Node.js", "Express", "PostgreSQL"],
+      education: "B.Sc. in Computer Science",
+      linkedin: "https://linkedin.com/in/alex-rivera-example",
+      businessLink: "https://alex-portfolio.example.com",
+      contactEmail: "alex@example.com",
+      contactPhone: "+1 (555) 019-2834"
+    }
+  },
+  {
+    id: "u_sophiachen",
+    email: "sophia@example.com",
+    name: "Sophia Chen",
+    role: "user",
+    category: "seller",
+    joinedDate: "2026-03-12",
+    sellerStatus: "approved",
+    bio: "AI Engineer specializing in custom LLM automation, agentic workflows, and semantic search.",
+    avatarUrl: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=150&auto=format&fit=crop",
+    portfolio: {
+      title: "Specialist AI Integration Expert",
+      description: "Optimizing operations by infusing Gemini models into custom customer workflows.",
+      skills: ["Gemini LLM", "Python", "LangChain", "Vector Databases", "Prompt Engineering"],
+      education: "M.Sc. in Artificial Intelligence",
+      linkedin: "https://linkedin.com/in/sophia-chen-example",
+      businessLink: "https://sophia-ai.example.com",
+      contactEmail: "sophia@example.com",
+      contactPhone: "+1 (555) 024-9183"
+    }
+  }
+];
 
-const DEFAULT_GIGS: Gig[] = [];
+const DEFAULT_GIGS: Gig[] = [
+  {
+    id: "g_saas_react",
+    title: "Premium React & Tailwind Frontend Application Development",
+    description: "Architect and deliver a highly optimized modern React frontend build styled cleanly with Tailwind CSS. Includes custom animation states, pristine mobile responsiveness, and clean component isolation.",
+    price: 350,
+    category: "Development",
+    tags: ["React", "Tailwind CSS", "TypeScript", "Next.js"],
+    sellerId: "u_alex",
+    sellerName: "Alex Rivera",
+    imageUrl: "https://images.unsplash.com/photo-1555066935-4365d14bab8c?q=80&w=600&auto=format&fit=crop",
+    views: 142,
+    inquiryCount: 4,
+    rating: 4.9,
+    ratingCount: 12,
+    createdAt: "2026-03-01T12:00:00Z"
+  },
+  {
+    id: "g_ai_agents",
+    title: "Custom LLM & Gemini Agentic Integration Pipelines",
+    description: "Design and implement custom AI automated workflows powered by the latest Gemini web services. Build semantic search agents, auto-notifiers, classification indices, and safe agent execution pipelines without exposing keys.",
+    price: 480,
+    category: "AI Services",
+    tags: ["AI Services", "Gemini", "Automation", "LLM"],
+    sellerId: "u_sophiachen",
+    sellerName: "Sophia Chen",
+    imageUrl: "https://images.unsplash.com/photo-1677442136019-21780efad99a?q=80&w=600&auto=format&fit=crop",
+    views: 215,
+    inquiryCount: 8,
+    rating: 5.0,
+    ratingCount: 9,
+    createdAt: "2026-03-15T15:30:00Z"
+  },
+  {
+    id: "g_seo_strategy",
+    title: "High-Impact Commercial Search Engine Optimization Audit",
+    description: "Comprehensive page audit covering index maps, search rank diagnostics, load latency performance, and full site-wide content strategy proposals to increase organic conversions by up to 2.5x.",
+    price: 180,
+    category: "Marketing",
+    tags: ["SEO", "Marketing", "Audit", "Strategy"],
+    sellerId: "u_alex",
+    sellerName: "Alex Rivera",
+    imageUrl: "https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=600&auto=format&fit=crop",
+    views: 89,
+    inquiryCount: 2,
+    rating: 4.8,
+    ratingCount: 15,
+    createdAt: "2026-03-10T09:15:00Z"
+  }
+];
 
-const DEFAULT_INQUIRIES: Inquiry[] = [];
+const DEFAULT_INQUIRIES: Inquiry[] = [
+  {
+    id: "inq_demo_1",
+    gigId: "g_saas_react",
+    gigTitle: "Premium React & Tailwind Frontend Application Development",
+    buyerId: "u_admin",
+    buyerName: "Maliya Admin",
+    buyerEmail: "maliyagigs@gmail.com",
+    sellerId: "u_alex",
+    sellerName: "Alex Rivera",
+    proposedBudget: 350,
+    message: "Hi Alex, we need a high-end multi-view portfolio template inspired by Space Grotesk. Can we complete this in 5 days?",
+    status: "responded",
+    sellerResponse: "Hi Maliya! Yes, I can prioritize and deliver this workspace frontend cleanly with fully interactive animations in 4 days. Looking forward!",
+    respondedAt: "2026-05-15T14:22:00Z",
+    createdAt: "2026-05-14T10:15:00Z"
+  },
+  {
+    id: "inq_demo_2",
+    gigId: "g_ai_agents",
+    gigTitle: "Custom LLM & Gemini Agentic Integration Pipelines",
+    buyerId: "u_admin",
+    buyerName: "Maliya Admin",
+    buyerEmail: "maliyagigs@gmail.com",
+    sellerId: "u_sophiachen",
+    sellerName: "Sophia Chen",
+    proposedBudget: 450,
+    message: "Hello Sophia, can you build a server proxy for our workspace that automatically parses chemical compounds and files safety reports via Gemini?",
+    status: "pending",
+    createdAt: "2026-06-01T11:00:00Z"
+  }
+];
 
 const DEFAULT_NOTIFICATIONS: Notification[] = [
   {
@@ -126,11 +257,39 @@ const DEFAULT_NOTIFICATIONS: Notification[] = [
   },
 ];
 
+const DEFAULT_ORDERS: Order[] = [
+  {
+    id: "ord_demo_1",
+    gigId: "g_saas_react",
+    gigTitle: "Premium React & Tailwind Frontend Application Development",
+    price: 350,
+    buyerId: "u_admin",
+    buyerName: "Maliya Admin",
+    sellerId: "u_alex",
+    sellerName: "Alex Rivera",
+    status: "delivered",
+    createdAt: "2026-05-20T09:00:00Z",
+    deliveredAt: "2026-05-25T17:45:00Z"
+  },
+  {
+    id: "ord_demo_2",
+    gigId: "g_seo_strategy",
+    gigTitle: "High-Impact Commercial Search Engine Optimization Audit",
+    price: 180,
+    buyerId: "u_admin",
+    buyerName: "Maliya Admin",
+    sellerId: "u_alex",
+    sellerName: "Alex Rivera",
+    status: "in_progress",
+    createdAt: "2026-05-28T10:30:00Z"
+  }
+];
+
 export function AppProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<User[]>(DEFAULT_USERS);
   const [gigs, setGigs] = useState<Gig[]>(DEFAULT_GIGS);
   const [inquiries, setInquiries] = useState<Inquiry[]>(DEFAULT_INQUIRIES);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders, setOrders] = useState<Order[]>(DEFAULT_ORDERS);
   const [notifications, setNotifications] = useState<Notification[]>(DEFAULT_NOTIFICATIONS);
   const [projects, setProjects] = useState<Project[]>([]);
   const [settings, setSettings] = useState<SiteSettings>({
@@ -148,7 +307,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     return stored === "dark" || stored === "light" ? stored : "light";
   });
 
-  const [activeView, setActiveView] = useState<"dashboard" | "profile">("dashboard");
+  const [activeView, setActiveView] = useState<"dashboard" | "profile" | "admin">("dashboard");
 
   // Pull database state from Express on mount
   useEffect(() => {
@@ -242,6 +401,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!res.ok || !contentType || !contentType.includes("application/json")) {
         if (isLocalAdminMatch) {
           setCurrentUser(LOCAL_ADMIN_USER);
+          setActiveView("admin");
           setUsers((prev) => {
             const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
             if (match) {
@@ -257,6 +417,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const data = await res.json();
       if (res.ok && data.success) {
         setCurrentUser(data.user);
+        if (data.user.role === "admin") {
+          setActiveView("admin");
+        }
         setUsers((prev) => {
           const match = prev.find((u) => u.id === data.user.id);
           if (match) {
@@ -270,6 +433,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (isLocalAdminMatch) {
         setCurrentUser(LOCAL_ADMIN_USER);
+        setActiveView("admin");
         setUsers((prev) => {
           const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
           if (match) {
@@ -285,6 +449,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       console.error("Login fetch error:", err);
       if (isLocalAdminMatch) {
         setCurrentUser(LOCAL_ADMIN_USER);
+        setActiveView("admin");
         setUsers((prev) => {
           const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
           if (match) {
@@ -319,6 +484,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
       if (!res.ok || !contentType || !contentType.includes("application/json")) {
         if (isLocalAdminMatch) {
           setCurrentUser(LOCAL_ADMIN_USER);
+          setActiveView("admin");
           setUsers((prev) => {
             const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
             if (match) {
@@ -334,6 +500,9 @@ export function AppProvider({ children }: { children: ReactNode }) {
       const data = await res.json();
       if (res.ok && data.success) {
         setCurrentUser(data.user);
+        if (data.user.role === "admin") {
+          setActiveView("admin");
+        }
         setUsers((prev) => {
           const match = prev.find((u) => u.id === data.user.id);
           if (match) {
@@ -347,6 +516,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
       if (isLocalAdminMatch) {
         setCurrentUser(LOCAL_ADMIN_USER);
+        setActiveView("admin");
         setUsers((prev) => {
           const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
           if (match) {
