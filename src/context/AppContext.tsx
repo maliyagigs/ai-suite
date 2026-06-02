@@ -1,3 +1,4 @@
+const API_BASE_URL = typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_API_URL ? (import.meta as any).env.VITE_API_URL : "";
 import {
   createContext,
   useContext,
@@ -314,7 +315,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let active = true;
     const fetchDatabase = async () => {
       try {
-        const res = await fetch("/api/db");
+        const res = await fetch(API_BASE_URL + "/api/db");
         if (!res.ok) throw new Error("Could not fetch remote server data");
         const data = await res.json();
         if (active) {
@@ -391,7 +392,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const isLocalAdminMatch = cleanEmail === "maliyagigs@gmail.com" && cleanPass === "g2jabB80";
 
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch(API_BASE_URL + "/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, pass, isAdminForm }),
@@ -474,7 +475,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     const isLocalAdminMatch = cleanEmail === "maliyagigs@gmail.com" && cleanPass === "g2jabB80";
 
     try {
-      const res = await fetch("/api/auth/register", {
+      const res = await fetch(API_BASE_URL + "/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, pass, isAdminForm }),
@@ -547,7 +548,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const googleLogin = async (credential: string, isAdminForm?: boolean): Promise<{ success: boolean; message: string }> => {
     try {
-      const res = await fetch("/api/auth/google", {
+      const res = await fetch(API_BASE_URL + "/api/auth/google", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ credential, isAdminForm }),
@@ -594,7 +595,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
     // Send async write update to the Express database
     try {
-      await fetch("/api/portfolio", {
+      await fetch(API_BASE_URL + "/api/portfolio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: currentUser.id, portfolio: currentUser.portfolio, sellerStatus: currentUser.sellerStatus, category: nextCategory }),
@@ -628,7 +629,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      const res = await fetch("/api/gigs", {
+      const res = await fetch(API_BASE_URL + "/api/gigs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -668,7 +669,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      const res = await fetch("/api/inquiries", {
+      const res = await fetch(API_BASE_URL + "/api/inquiries", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -700,7 +701,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updated : u)));
 
     try {
-      await fetch("/api/portfolio", {
+      await fetch(API_BASE_URL + "/api/portfolio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: currentUser.id, portfolio }),
@@ -718,7 +719,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setUsers((prev) => prev.map((u) => (u.id === currentUser.id ? updated : u)));
 
     try {
-      await fetch("/api/portfolio", {
+      await fetch(API_BASE_URL + "/api/portfolio", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: currentUser.id, portfolio, sellerStatus: "pending" }),
@@ -745,7 +746,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      await fetch(`/api/seller-application/${userId}/approve`, { method: "POST" });
+      await fetch(`${API_BASE_URL}/api/seller-application/${userId}/approve`, { method: "POST" });
     } catch (err) {
       console.error("Error approving seller:", err);
     }
@@ -768,7 +769,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      await fetch(`/api/seller-application/${userId}/reject`, { method: "POST" });
+      await fetch(`${API_BASE_URL}/api/seller-application/${userId}/reject`, { method: "POST" });
     } catch (err) {
       console.error("Error rejecting seller:", err);
     }
@@ -780,7 +781,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
 
     try {
-      await fetch(`/api/gigs/${gigId}/view`, { method: "POST" });
+      await fetch(`${API_BASE_URL}/api/gigs/${gigId}/view`, { method: "POST" });
     } catch (err) {
       console.error("Error incrementing views:", err);
     }
@@ -790,7 +791,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setGigs((prev) => prev.filter((g) => g.id !== gigId));
 
     try {
-      await fetch(`/api/gigs/${gigId}`, { method: "DELETE" });
+      await fetch(`${API_BASE_URL}/api/gigs/${gigId}`, { method: "DELETE" });
     } catch (err) {
       console.error("Error deleting gig:", err);
     }
@@ -802,7 +803,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setGigs((prev) => prev.filter((g) => g.sellerId !== userId));
 
     try {
-      await fetch(`/api/users/${userId}`, { method: "DELETE" });
+      await fetch(`${API_BASE_URL}/api/users/${userId}`, { method: "DELETE" });
     } catch (err) {
       console.error("Error deleting user:", err);
     }
@@ -814,7 +815,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     targetUserId?: string,
   ) => {
     try {
-      const res = await fetch("/api/notifications", {
+      const res = await fetch(API_BASE_URL + "/api/notifications", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, message, senderName: currentUser?.name || "Admin", targetUserId }),
@@ -837,7 +838,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
 
     try {
-      await fetch(`/api/notifications/${id}/read`, { method: "POST" });
+      await fetch(`${API_BASE_URL}/api/notifications/${id}/read`, { method: "POST" });
     } catch (err) {
       console.error("Error marking read:", err);
     }
@@ -847,7 +848,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setNotifications([]);
 
     try {
-      await fetch("/api/notifications/clear", { method: "DELETE" });
+      await fetch(API_BASE_URL + "/api/notifications/clear", { method: "DELETE" });
     } catch (err) {
       console.error("Error clearing notifications:", err);
     }
@@ -857,7 +858,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setInquiries([]);
 
     try {
-      await fetch("/api/inquiries/clear", { method: "DELETE" });
+      await fetch(API_BASE_URL + "/api/inquiries/clear", { method: "DELETE" });
     } catch (err) {
       console.error("Error clearing inquiries:", err);
     }
@@ -867,7 +868,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     setInquiries((prev) => prev.filter((inq) => inq.id !== id));
 
     try {
-      await fetch(`/api/inquiries/${id}`, { method: "DELETE" });
+      await fetch(`${API_BASE_URL}/api/inquiries/${id}`, { method: "DELETE" });
     } catch (err) {
       console.error("Error deleting inquiry:", err);
     }
@@ -875,7 +876,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const respondToInquiry = async (id: string, message: string) => {
     try {
-      const res = await fetch(`/api/inquiries/${id}/respond`, {
+      const res = await fetch(`${API_BASE_URL}/api/inquiries/${id}/respond`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ responseText: message }),
@@ -908,7 +909,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     );
 
     try {
-      await fetch(`/api/gigs/${gigId}/rate`, {
+      await fetch(`${API_BASE_URL}/api/gigs/${gigId}/rate`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating: userRating }),
@@ -940,7 +941,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     };
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch(API_BASE_URL + "/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
@@ -959,7 +960,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const acceptOrder = async (orderId: string) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/accept`, { method: "POST" });
+      const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/accept`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.order) {
@@ -973,7 +974,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deliverOrder = async (orderId: string) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/deliver`, { method: "POST" });
+      const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/deliver`, { method: "POST" });
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.order) {
@@ -987,7 +988,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const completeAndRateOrder = async (orderId: string, rating: number, comment?: string) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/complete`, {
+      const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/complete`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ rating, ratingComment: comment }),
@@ -998,7 +999,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
           setOrders((prev) => prev.map((o) => (o.id === orderId ? data.order : o)));
           
           // Re-fetch database to get fresh ratings/gigs in state
-          const freshRes = await fetch("/api/db");
+          const freshRes = await fetch(API_BASE_URL + "/api/db");
           if (freshRes.ok) {
             const freshData = await freshRes.json();
             if (freshData.gigs) setGigs(freshData.gigs);
@@ -1013,7 +1014,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const disputeOrder = async (orderId: string, reason: string) => {
     try {
-      const res = await fetch(`/api/orders/${orderId}/dispute`, {
+      const res = await fetch(`${API_BASE_URL}/api/orders/${orderId}/dispute`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ disputeReason: reason }),
@@ -1034,7 +1035,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
   ): Promise<{ success: boolean; message: string }> => {
     if (!currentUser) return { success: false, message: "No active user logged in" };
     try {
-      const res = await fetch("/api/user/update", {
+      const res = await fetch(API_BASE_URL + "/api/user/update", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ userId: currentUser.id, ...fields }),
@@ -1060,7 +1061,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
     url: string,
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      const res = await fetch("/api/projects", {
+      const res = await fetch(API_BASE_URL + "/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, description, url }),
@@ -1079,7 +1080,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
 
   const deleteProject = async (id: string): Promise<void> => {
     try {
-      const res = await fetch(`/api/projects/${id}`, {
+      const res = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
         method: "DELETE",
       });
       if (res.ok) {
@@ -1099,7 +1100,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         activeBuyersCount: updates.activeBuyersCount !== undefined ? Number(updates.activeBuyersCount) : settings.activeBuyersCount
       };
 
-      const res = await fetch("/api/settings", {
+      const res = await fetch(API_BASE_URL + "/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
