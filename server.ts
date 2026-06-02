@@ -26,7 +26,7 @@ try {
 
 const app = express();
 const PORT = 3000;
-const DB_FILE = path.join(cleanDirname, "server_db.json");
+const DB_FILE = path.join(process.cwd(), "server_db.json");
 
 const cleanVal = (val: string) => {
   let v = val.trim();
@@ -308,26 +308,31 @@ app.get("/api/projects", (req, res) => {
 
 // POST /api/projects - Add a new web creation project
 app.post("/api/projects", (req, res) => {
-  const { title, description, url } = req.body;
-  if (!title || !description || !url) {
-    return res.status(400).json({ error: "Title, description, and link URL are required." });
+  try {
+    const { title, description, url } = req.body || {};
+    if (!title || !description || !url) {
+      return res.status(400).json({ error: "Title, description, and link URL are required." });
+    }
+
+    const db = loadDB();
+    if (!db.projects) {
+      db.projects = [];
+    }
+
+    const newProject: Project = {
+      id: `proj_${Date.now()}`,
+      title: title.trim(),
+      description: description.trim(),
+      url: url.trim()
+    };
+
+    db.projects.push(newProject);
+    saveDB(db);
+    res.status(201).json(newProject);
+  } catch (err: any) {
+    console.error("Error creating project:", err);
+    res.status(500).json({ error: "Failed to create project: " + err.message });
   }
-
-  const db = loadDB();
-  if (!db.projects) {
-    db.projects = [];
-  }
-
-  const newProject: Project = {
-    id: `proj_${Date.now()}`,
-    title: title.trim(),
-    description: description.trim(),
-    url: url.trim()
-  };
-
-  db.projects.push(newProject);
-  saveDB(db);
-  res.status(201).json(newProject);
 });
 
 // DELETE /api/projects/:id - Delete a web creation project
@@ -345,14 +350,19 @@ app.delete("/api/projects/:id", (req, res) => {
 
 // POST /api/settings - Update site settings (Admin only)
 app.post("/api/settings", (req, res) => {
-  const { paidToSellersCount, activeBuyersCount } = req.body;
-  const db = loadDB();
-  db.settings = {
-    paidToSellersCount: paidToSellersCount !== undefined ? Number(paidToSellersCount) : (db.settings?.paidToSellersCount ?? 2),
-    activeBuyersCount: activeBuyersCount !== undefined ? Number(activeBuyersCount) : (db.settings?.activeBuyersCount ?? 10)
-  };
-  saveDB(db);
-  res.json({ success: true, settings: db.settings });
+  try {
+    const { paidToSellersCount, activeBuyersCount } = req.body || {};
+    const db = loadDB();
+    db.settings = {
+      paidToSellersCount: paidToSellersCount !== undefined ? Number(paidToSellersCount) : (db.settings?.paidToSellersCount ?? 2),
+      activeBuyersCount: activeBuyersCount !== undefined ? Number(activeBuyersCount) : (db.settings?.activeBuyersCount ?? 10)
+    };
+    saveDB(db);
+    res.json({ success: true, settings: db.settings });
+  } catch (err: any) {
+    console.error("Error saving settings:", err);
+    res.status(500).json({ error: "Failed to save settings: " + err.message });
+  }
 });
 
 // GET /api/gigs - Get all gigs
