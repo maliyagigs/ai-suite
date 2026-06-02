@@ -1,5 +1,19 @@
 const API_BASE_URL = typeof import.meta !== "undefined" && (import.meta as any).env && (import.meta as any).env.VITE_API_URL ? (import.meta as any).env.VITE_API_URL : "";
 import {
+  databases,
+  account,
+  ID,
+  Query,
+  DATABASE_ID,
+  USERS_COL,
+  GIGS_COL,
+  INQUIRIES_COL,
+  ORDERS_COL,
+  NOTIFICATIONS_COL,
+  PROJECTS_COL,
+  SETTINGS_COL
+} from "../lib/appwrite";
+import {
   createContext,
   useContext,
   useState,
@@ -315,36 +329,35 @@ export function AppProvider({ children }: { children: ReactNode }) {
     let active = true;
     const fetchDatabase = async () => {
       try {
-        const res = await fetch(API_BASE_URL + "/api/db");
-        if (!res.ok) throw new Error("Could not fetch remote server data");
-        
-        const contentType = res.headers.get("content-type");
-        if (!contentType || !contentType.includes("application/json")) {
-          throw new Error("Invalid response from server. Check your VITE_API_URL configuration if hosting statically.");
+        if (!DATABASE_ID || DATABASE_ID === "melagent_db") {
+           console.warn("Appwrite Database ID not configured! Using local temporary schema.");
+           // Mock data if appwrite is not configured
+           return;
         }
-        
-        const data = await res.json();
-        if (active) {
-          if (data.users !== undefined) setUsers(data.users);
-          if (data.gigs !== undefined) setGigs(data.gigs);
-          if (data.inquiries !== undefined) setInquiries(data.inquiries);
-          if (data.orders !== undefined) setOrders(data.orders);
-          if (data.notifications !== undefined) setNotifications(data.notifications);
-          if (data.projects !== undefined) setProjects(data.projects);
-          if (data.settings !== undefined) setSettings(data.settings);
 
-          // Keep local cached user in sync with remote fields
-          const cached = localStorage.getItem("melagent_current_v2");
-          if (cached) {
-            const parsed = JSON.parse(cached) as User;
-            const fresh = (data.users as User[]).find((u) => u.id === parsed.id);
-            if (fresh) {
-              setCurrentUser(fresh);
-            }
+        const [usersRes, gigsRes, inquiriesRes, ordersRes, notificationsRes, projectsRes, settingsRes] = await Promise.all([
+          databases.listDocuments(DATABASE_ID, USERS_COL),
+          databases.listDocuments(DATABASE_ID, GIGS_COL),
+          databases.listDocuments(DATABASE_ID, INQUIRIES_COL),
+          databases.listDocuments(DATABASE_ID, ORDERS_COL),
+          databases.listDocuments(DATABASE_ID, NOTIFICATIONS_COL),
+          databases.listDocuments(DATABASE_ID, PROJECTS_COL),
+          databases.listDocuments(DATABASE_ID, SETTINGS_COL)
+        ]);
+        
+        if (active) {
+          setUsers(usersRes.documents as any);
+          setGigs(gigsRes.documents as any);
+          setInquiries(inquiriesRes.documents as any);
+          setOrders(ordersRes.documents as any);
+          setNotifications(notificationsRes.documents as any);
+          setProjects(projectsRes.documents as any);
+          if (settingsRes.documents.length > 0) {
+            setSettings(settingsRes.documents[0] as any);
           }
         }
       } catch (err) {
-        console.error("Express DB synchronization error:", err);
+        console.error("Appwrite DB synchronization error. Check .env config.", err);
       }
     };
 
@@ -393,80 +406,23 @@ export function AppProvider({ children }: { children: ReactNode }) {
     pass: string,
     isAdminForm?: boolean,
   ): Promise<{ success: boolean; message: string }> => {
-    const cleanEmail = email.toLowerCase().trim();
-    const cleanPass = pass.trim();
-    const isLocalAdminMatch = cleanEmail === "maliyagigs@gmail.com" && cleanPass === "g2jabB80";
-
     try {
-      const res = await fetch(API_BASE_URL + "/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, pass, isAdminForm }),
-      });
-
-      const contentType = res.headers.get("content-type");
-      if (!res.ok || !contentType || !contentType.includes("application/json")) {
-        if (isLocalAdminMatch) {
-          setCurrentUser(LOCAL_ADMIN_USER);
-          setActiveView("admin");
-          setUsers((prev) => {
-            const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
-            if (match) {
-              return prev.map((u) => (u.id === LOCAL_ADMIN_USER.id ? LOCAL_ADMIN_USER : u));
-            }
-            return [...prev, LOCAL_ADMIN_USER];
-          });
-          return { success: true, message: "Successfully signed in via Administrative Fallback!" };
-        }
-        return { success: false, message: `Server error (${res.status}).` };
+      if (DATABASE_ID !== "melagent_db") {
+         await account.createEmailPasswordSession(email, pass);
+         const prefs = await account.getPrefs();
+         const userDoc = await databases.listDocuments(DATABASE_ID, USERS_COL, [Query.equal("email", email)]);
+         let usr = userDoc.documents[0] as any;
+         setCurrentUser(usr);
+         if (usr.role === "admin") setActiveView("admin");
+         return { success: true, message: "Logged in via Appwrite Engine!" };
       }
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setCurrentUser(data.user);
-        if (data.user.role === "admin") {
-          setActiveView("admin");
-        }
-        setUsers((prev) => {
-          const match = prev.find((u) => u.id === data.user.id);
-          if (match) {
-            return prev.map((u) => (u.id === data.user.id ? data.user : u));
-          } else {
-            return [...prev, data.user];
-          }
-        });
-        return { success: true, message: data.message };
+      return { success: false, message: "Appwrite not configured to handle Auth yet." };
+    } catch (err: any) {
+      console.error(err);
+      if (err.message === "Failed to fetch") {
+        return { success: false, message: "Auth Failed (CORS Issue): Please add this app's preview URL as a Web Platform in your Appwrite Project settings to allow CORS." };
       }
-
-      if (isLocalAdminMatch) {
-        setCurrentUser(LOCAL_ADMIN_USER);
-        setActiveView("admin");
-        setUsers((prev) => {
-          const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
-          if (match) {
-            return prev.map((u) => (u.id === LOCAL_ADMIN_USER.id ? LOCAL_ADMIN_USER : u));
-          }
-          return [...prev, LOCAL_ADMIN_USER];
-        });
-        return { success: true, message: "Successfully signed in via Administrative Fallback!" };
-      }
-
-      return { success: false, message: data.message || "Failed signing in." };
-    } catch (err) {
-      console.error("Login fetch error:", err);
-      if (isLocalAdminMatch) {
-        setCurrentUser(LOCAL_ADMIN_USER);
-        setActiveView("admin");
-        setUsers((prev) => {
-          const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
-          if (match) {
-            return prev.map((u) => (u.id === LOCAL_ADMIN_USER.id ? LOCAL_ADMIN_USER : u));
-          }
-          return [...prev, LOCAL_ADMIN_USER];
-        });
-        return { success: true, message: "Successfully signed in via Administrative Local Fallback!" };
-      }
-      return { success: false, message: "Server connection failed: " + (err instanceof Error ? err.message : String(err)) };
+      return { success: false, message: "Auth Failed: " + err.message };
     }
   };
 
@@ -476,79 +432,26 @@ export function AppProvider({ children }: { children: ReactNode }) {
     pass: string,
     isAdminForm?: boolean,
   ): Promise<{ success: boolean; message: string }> => {
-    const cleanEmail = email.toLowerCase().trim();
-    const cleanPass = pass.trim();
-    const isLocalAdminMatch = cleanEmail === "maliyagigs@gmail.com" && cleanPass === "g2jabB80";
-
     try {
-      const res = await fetch(API_BASE_URL + "/api/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, pass, isAdminForm }),
-      });
-
-      const contentType = res.headers.get("content-type");
-      if (!res.ok || !contentType || !contentType.includes("application/json")) {
-        if (isLocalAdminMatch) {
-          setCurrentUser(LOCAL_ADMIN_USER);
-          setActiveView("admin");
-          setUsers((prev) => {
-            const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
-            if (match) {
-              return prev.map((u) => (u.id === LOCAL_ADMIN_USER.id ? LOCAL_ADMIN_USER : u));
-            }
-            return [...prev, LOCAL_ADMIN_USER];
-          });
-          return { success: true, message: "Successfully registered and signed in via Administrative Fallback!" };
-        }
-        return { success: false, message: `Server error (${res.status}).` };
+      if (DATABASE_ID !== "melagent_db") {
+         const newAccount = await account.create(ID.unique(), email, pass, name);
+         await account.createEmailPasswordSession(email, pass);
+         
+         const newUser = await databases.createDocument(DATABASE_ID, USERS_COL, newAccount.$id, {
+            email, name, role: isAdminForm ? "admin" : "user", category: "buyer", joinedDate: new Date().toISOString()
+         });
+         setCurrentUser(newUser as any);
+         if (isAdminForm) setActiveView("admin");
+         
+         return { success: true, message: "Registered via Appwrite Engine!" };
       }
-
-      const data = await res.json();
-      if (res.ok && data.success) {
-        setCurrentUser(data.user);
-        if (data.user.role === "admin") {
-          setActiveView("admin");
-        }
-        setUsers((prev) => {
-          const match = prev.find((u) => u.id === data.user.id);
-          if (match) {
-            return prev.map((u) => (u.id === data.user.id ? data.user : u));
-          } else {
-            return [...prev, data.user];
-          }
-        });
-        return { success: true, message: data.message };
+      return { success: false, message: "Appwrite not configured to handle Auth yet." };
+    } catch (err: any) {
+      console.error(err);
+      if (err.message === "Failed to fetch") {
+        return { success: false, message: "Auth Failed (CORS Issue): Please add this app's preview URL as a Web Platform in your Appwrite Project settings to allow CORS." };
       }
-
-      if (isLocalAdminMatch) {
-        setCurrentUser(LOCAL_ADMIN_USER);
-        setActiveView("admin");
-        setUsers((prev) => {
-          const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
-          if (match) {
-            return prev.map((u) => (u.id === LOCAL_ADMIN_USER.id ? LOCAL_ADMIN_USER : u));
-          }
-          return [...prev, LOCAL_ADMIN_USER];
-        });
-        return { success: true, message: "Successfully signed in via Administrative Fallback!" };
-      }
-
-      return { success: false, message: data.message || "Failed registration." };
-    } catch (err) {
-      console.error("Register fetch error:", err);
-      if (isLocalAdminMatch) {
-        setCurrentUser(LOCAL_ADMIN_USER);
-        setUsers((prev) => {
-          const match = prev.find((u) => u.id === LOCAL_ADMIN_USER.id);
-          if (match) {
-            return prev.map((u) => (u.id === LOCAL_ADMIN_USER.id ? LOCAL_ADMIN_USER : u));
-          }
-          return [...prev, LOCAL_ADMIN_USER];
-        });
-        return { success: true, message: "Successfully signed in via Administrative Local Fallback!" };
-      }
-      return { success: false, message: "Server connection failed: " + (err instanceof Error ? err.message : String(err)) };
+      return { success: false, message: "Auth Failed: " + err.message };
     }
   };
 
@@ -627,30 +530,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
   ) => {
     if (!currentUser) return;
     
-    // Create payload
-    const payload = {
-      ...gigData,
-      sellerId: currentUser.id,
-      sellerName: currentUser.name,
-    };
-
     try {
-      const res = await fetch(API_BASE_URL + "/api/gigs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      const payload = {
+        ...gigData,
+        sellerId: currentUser.id,
+        sellerName: currentUser.name,
+      };
 
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.gig) {
-          setGigs((prev) => [data.gig, ...prev]);
-        }
+      if (!DATABASE_ID || DATABASE_ID === "melagent_db") {
+         const newGig = { ...payload, id: `g_${Date.now()}`, views: 0, inquiryCount: 0, rating: 5, ratingCount: 1, createdAt: new Date().toISOString() };
+         setGigs((prev) => [newGig, ...prev]);
+         return;
       }
+
+      const doc = await databases.createDocument(
+        DATABASE_ID,
+        GIGS_COL,
+        ID.unique(),
+        {
+          ...payload,
+          views: 0, inquiryCount: 0, rating: 5, ratingCount: 1, createdAt: new Date().toISOString()
+        }
+      );
+      setGigs((prev) => [doc as any, ...prev]);
     } catch (err) {
-      console.error("Failed to transmit gig listing:", err);
+      console.error("Failed to transmit gig listing to Appwrite:", err);
     }
   };
+
 
   // Submit modern service inquiry
   const submitInquiry = async (
@@ -782,24 +689,30 @@ export function AppProvider({ children }: { children: ReactNode }) {
   };
 
   const incrementViews = async (gigId: string) => {
-    setGigs((prev) =>
-      prev.map((g) => (g.id === gigId ? { ...g, views: g.views + 1 } : g)),
-    );
+    const targetGig = gigs.find(g => g.id === gigId || (g as any).$id === gigId);
+    if (!targetGig) return;
+    const newViews = targetGig.views + 1;
+    
+    setGigs((prev) => prev.map((g) => (g.id === gigId || (g as any).$id === gigId ? { ...g, views: newViews } : g)));
 
     try {
-      await fetch(`${API_BASE_URL}/api/gigs/${gigId}/view`, { method: "POST" });
+      if (DATABASE_ID !== "melagent_db") {
+        await databases.updateDocument(DATABASE_ID, GIGS_COL, gigId, { views: newViews });
+      }
     } catch (err) {
-      console.error("Error incrementing views:", err);
+      console.error("Error incrementing views Appwrite:", err);
     }
   };
 
   const deleteGig = async (gigId: string) => {
-    setGigs((prev) => prev.filter((g) => g.id !== gigId));
+    setGigs((prev) => prev.filter((g) => g.id !== gigId && (g as any).$id !== gigId));
 
     try {
-      await fetch(`${API_BASE_URL}/api/gigs/${gigId}`, { method: "DELETE" });
+      if (DATABASE_ID !== "melagent_db") {
+        await databases.deleteDocument(DATABASE_ID, GIGS_COL, gigId);
+      }
     } catch (err) {
-      console.error("Error deleting gig:", err);
+      console.error("Error deleting gig in Appwrite:", err);
     }
   };
 
@@ -1067,33 +980,34 @@ export function AppProvider({ children }: { children: ReactNode }) {
     url: string,
   ): Promise<{ success: boolean; message: string }> => {
     try {
-      const res = await fetch(API_BASE_URL + "/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, url }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setProjects((prev) => [...prev, data]);
-        return { success: true, message: "Project preview added successfully!" };
+      if (!DATABASE_ID || DATABASE_ID === "melagent_db") {
+        const newProj = { id: `proj_${Date.now()}`, title, description, url };
+        setProjects((prev) => [...prev, newProj]);
+        return { success: true, message: "Project preview added locally (Appwrite missing)!" };
       }
-      return { success: false, message: data.error || "Could not save project." };
-    } catch (err) {
+      
+      const newProj = await databases.createDocument(
+        DATABASE_ID,
+        PROJECTS_COL,
+        ID.unique(),
+        { title, description, url }
+      );
+      setProjects((prev) => [...prev, newProj as any]);
+      return { success: true, message: "Project preview added to Appwrite!" };
+    } catch (err: any) {
       console.error(err);
-      return { success: false, message: "Failed connection to backend." };
+      return { success: false, message: "Appwrite connection failed: " + err.message };
     }
   };
 
   const deleteProject = async (id: string): Promise<void> => {
     try {
-      const res = await fetch(`${API_BASE_URL}/api/projects/${id}`, {
-        method: "DELETE",
-      });
-      if (res.ok) {
-        setProjects((prev) => prev.filter((p) => p.id !== id));
+      if (DATABASE_ID !== "melagent_db") {
+        await databases.deleteDocument(DATABASE_ID, PROJECTS_COL, id);
       }
+      setProjects((prev) => prev.filter((p) => (p as any).$id !== id && p.id !== id));
     } catch (err) {
-      console.error("Error deleting project:", err);
+      console.error("Error deleting project in Appwrite:", err);
     }
   };
 
