@@ -68,7 +68,7 @@ export function Navbar() {
         {/* Right side Action Bar */}
         <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
 
-          {/* Moved Working Mode Switcher to the top right section */}
+          {/* Working Mode Switcher & Admin Panel jump links */}
           {!isAdmin ? (
             <div className="relative flex items-center rounded-full bg-slate-100 dark:bg-slate-800 p-0.5 sm:p-1 shrink-0">
               <motion.div
@@ -112,9 +112,70 @@ export function Navbar() {
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1 rounded-full bg-amber-50 dark:bg-amber-950/40 px-2 py-1 md:px-2.5 md:py-1 text-[10px] md:text-xs font-bold tracking-wider text-amber-700 dark:text-amber-400 ring-1 ring-amber-500/20 shrink-0">
-              <Shield className="h-3.5 w-3.5 animate-pulse" />
-              <span>ADMIN</span>
+            <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+              {/* Working Mode Switcher for the Admin to test platform features */}
+              <div className="relative flex items-center rounded-full bg-slate-100 dark:bg-slate-800 p-0.5 sm:p-1 shrink-0">
+                <motion.div
+                  className="absolute top-0.5 bottom-0.5 rounded-full bg-white dark:bg-slate-700 shadow-sm"
+                  initial={false}
+                  animate={{
+                    left: isSeller ? '51%' : '2%',
+                    right: isSeller ? '2%' : '51%',
+                  }}
+                  transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                />
+
+                <button
+                  id="toggle-buyer-mode"
+                  onClick={() => {
+                    if (isSeller) toggleCategory();
+                  }}
+                  className={`relative z-10 flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-bold tracking-wider transition-colors duration-200 cursor-pointer ${
+                    !isSeller 
+                      ? 'text-indigo-600 dark:text-indigo-400' 
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <ShoppingBag className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
+                  BUYER
+                </button>
+
+                <button
+                  id="toggle-seller-mode"
+                  onClick={() => {
+                    if (!isSeller) toggleCategory();
+                  }}
+                  className={`relative z-10 flex items-center gap-1.5 px-2 py-0.5 sm:px-2.5 sm:py-1 text-[9px] sm:text-xs font-bold tracking-wider transition-colors duration-200 cursor-pointer ${
+                    isSeller 
+                      ? 'text-indigo-600 dark:text-indigo-400' 
+                      : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200'
+                  }`}
+                >
+                  <Store className="h-2.5 w-2.5 sm:h-3.5 sm:w-3.5" />
+                  SELLER
+                </button>
+              </div>
+
+              {/* Admin Panel Toggle link */}
+              {window.location.pathname.toLowerCase().trim().includes("/admin") || 
+               window.location.hash.toLowerCase().trim().includes("admin") || 
+               window.location.search.toLowerCase().trim().includes("admin") ? (
+                <a
+                  href="/"
+                  className="flex items-center gap-1.5 rounded-full bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 px-2.5 py-1 text-[9px] md:text-xs font-bold tracking-wider text-white dark:text-slate-900 shadow-sm shrink-0 transition"
+                >
+                  <Sparkles className="h-3.5 w-3.5 text-indigo-500 shrink-0" />
+                  <span>PREVIEW WEB</span>
+                </a>
+              ) : (
+                <a
+                  href="/admin"
+                  className="flex items-center gap-1 rounded-full bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/40 dark:hover:bg-amber-950 px-2 sm:px-2.5 py-1 text-[9px] md:text-xs font-bold tracking-wider text-amber-700 dark:text-amber-400 ring-1 ring-amber-500/20 shrink-0 transition"
+                >
+                  <Shield className="h-3.5 w-3.5 shrink-0 animate-pulse" />
+                  <span>ADMIN PANEL</span>
+                </a>
+              )}
             </div>
           )}
           

@@ -19,8 +19,30 @@ function DashboardSwitch() {
     return <ProfilePage />;
   }
 
+  const cleanPath = window.location.pathname.toLowerCase().trim();
+  const cleanHash = window.location.hash.toLowerCase().trim();
+  const cleanSearch = window.location.search.toLowerCase().trim();
+  const isAdminRoute = 
+    cleanPath === "/admin" || 
+    cleanPath === "/admin/" || 
+    cleanPath.startsWith("/admin/") ||
+    cleanHash === "#admin" ||
+    cleanHash === "#/admin" ||
+    cleanHash.startsWith("#/admin/") ||
+    cleanSearch === "?admin" ||
+    cleanSearch === "?admin=true" ||
+    cleanSearch.includes("admin");
+
   if (currentUser.role === "admin") {
-    return <AdminDashboard />;
+    if (isAdminRoute) {
+      return <AdminDashboard />;
+    } else {
+      // Allows the system administrator to view the application as a normal buyer or seller
+      if (currentUser.category === "seller") {
+        return <SellerDashboard />;
+      }
+      return <BuyerDashboard />;
+    }
   }
 
   if (currentUser.category === "seller") {
@@ -39,7 +61,18 @@ function DashboardSwitch() {
 function MainAppLayout() {
   const { currentUser } = useApp();
   const cleanPath = window.location.pathname.toLowerCase().trim();
-  const isAdminRoute = cleanPath === "/admin" || cleanPath === "/admin/" || cleanPath.startsWith("/admin/");
+  const cleanHash = window.location.hash.toLowerCase().trim();
+  const cleanSearch = window.location.search.toLowerCase().trim();
+  const isAdminRoute = 
+    cleanPath === "/admin" || 
+    cleanPath === "/admin/" || 
+    cleanPath.startsWith("/admin/") ||
+    cleanHash === "#admin" ||
+    cleanHash === "#/admin" ||
+    cleanHash.startsWith("#/admin/") ||
+    cleanSearch === "?admin" ||
+    cleanSearch === "?admin=true" ||
+    cleanSearch.includes("admin");
 
   if (isAdminRoute) {
     if (!currentUser || currentUser.role !== "admin") {
