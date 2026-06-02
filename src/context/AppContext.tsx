@@ -317,6 +317,12 @@ export function AppProvider({ children }: { children: ReactNode }) {
       try {
         const res = await fetch(API_BASE_URL + "/api/db");
         if (!res.ok) throw new Error("Could not fetch remote server data");
+        
+        const contentType = res.headers.get("content-type");
+        if (!contentType || !contentType.includes("application/json")) {
+          throw new Error("Invalid response from server. Check your VITE_API_URL configuration if hosting statically.");
+        }
+        
         const data = await res.json();
         if (active) {
           if (data.users !== undefined) setUsers(data.users);
