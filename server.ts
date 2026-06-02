@@ -46,6 +46,9 @@ console.log(`[BOOT] Loaded administrator identity: "${ADMIN_EMAIL}" with key len
 
 const googleClient = new OAuth2Client("629111524631-3q4s91g3c69vtqmok0tu1a1io9haonfl.apps.googleusercontent.com");
 
+import cors from "cors";
+
+app.use(cors());
 app.use(express.json());
 
 // Seed data interfaces
