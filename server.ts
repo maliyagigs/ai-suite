@@ -8,12 +8,25 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+let cleanFilename = "";
+let cleanDirname = "";
+
+try {
+  if (typeof import.meta !== "undefined" && import.meta && import.meta.url) {
+    cleanFilename = fileURLToPath(import.meta.url);
+    cleanDirname = path.dirname(cleanFilename);
+  } else {
+    cleanFilename = __filename;
+    cleanDirname = __dirname;
+  }
+} catch (e) {
+  cleanFilename = typeof __filename !== "undefined" ? __filename : "";
+  cleanDirname = typeof __dirname !== "undefined" ? __dirname : "";
+}
 
 const app = express();
 const PORT = 3000;
-const DB_FILE = path.join(__dirname, "server_db.json");
+const DB_FILE = path.join(cleanDirname, "server_db.json");
 
 const cleanVal = (val: string) => {
   let v = val.trim();
