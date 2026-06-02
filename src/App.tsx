@@ -38,7 +38,8 @@ function DashboardSwitch() {
 
 function MainAppLayout() {
   const { currentUser } = useApp();
-  const isAdminRoute = window.location.pathname === "/admin";
+  const cleanPath = window.location.pathname.toLowerCase().trim();
+  const isAdminRoute = cleanPath === "/admin" || cleanPath === "/admin/" || cleanPath.startsWith("/admin/");
 
   if (isAdminRoute) {
     if (!currentUser || currentUser.role !== "admin") {

@@ -1342,30 +1342,45 @@ export function AuthScreen() {
 
 function TypewriterBackground() {
   const headlines = [
-    "MELAGENT NEWSLETTER: Escrow Volume reaches record high $2.4M under secure contracts...",
-    "TALENT REPORT: Top verified agents deployed 142 integrated full-stack solutions globally...",
-    "CONTRACT INITIATED: Austin startup commits custom backend microservice deployment audit...",
-    "PRODUCT DISPATCH: Instant buyer secure clearance confirms payout in 48 milliseconds...",
-    "TELEMETRY LOGS: Core signal calibrated 100% stable across transpacific link routes...",
-    "DECENTRALIZED WORKSPACE: Peer reviewed Rust, Go, and React veterans listed active today..."
+    "What is Lorem Ipsum?",
+    "Lorem Ipsum is simply dummy text of the printing and typesetting industry.",
+    "Lorem Ipsum has been the industry's standard dummy text ever since 1966, when designers at Letraset and James Mosley,",
+    "the librarian at St Bride Printing Library, took a 1914 Cicero translation and scrambled it to make dummy text for Letraset's Body Type sheets.",
+    "It has survived not only many decades, but also the leap into electronic typesetting, remaining essentially unchanged.",
+    "It was popularised thanks to these sheets and more recently with desktop publishing software including versions of Lorem Ipsum.",
+    "MELAGENT ECOSYSTEM: Secure high-growth escrow channels active in real-time...",
+    "SECURE CONTRACT INITIATED: 48 millisecond buyer verification and automated payouts...",
+    "TELEMETRY LOGS: Regional transpacific link routing reporting stable state at 100% capacity..."
+  ];
+
+  // Alternating highlight styling to ensure perfect aesthetic rhythm of cyber neon colors
+  const rowStyles = [
+    { text: "text-emerald-400 font-bold drop-shadow-[0_0_8px_rgba(52,211,153,0.6)] bg-slate-950/40 border border-emerald-500/15" },
+    { text: "text-cyan-400 font-bold drop-shadow-[0_0_8px_rgba(34,211,238,0.6)] bg-slate-950/40 border border-cyan-500/15" },
+    { text: "text-amber-300 font-bold drop-shadow-[0_0_8px_rgba(252,211,77,0.6)] bg-slate-950/40 border border-amber-500/20" },
+    { text: "text-indigo-400 font-bold drop-shadow-[0_0_8px_rgba(129,140,248,0.6)] bg-slate-950/40 border border-indigo-500/15" }
   ];
 
   return (
-    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.03] dark:opacity-[0.05] select-none font-mono text-[9px] md:text-xs leading-relaxed z-0">
-      {/* Grid of scrolling/typing rows */}
-      <div className="absolute -inset-10 flex flex-col justify-around gap-2 p-4">
-        {Array.from({ length: 12 }).map((_, rIdx) => {
+    <div className="absolute inset-0 pointer-events-none overflow-hidden opacity-[0.25] dark:opacity-[0.35] select-none font-mono text-[10px] md:text-sm leading-relaxed z-0">
+      {/* Grid of scrolling/typing rows with increased contrast */}
+      <div className="absolute -inset-10 flex flex-col justify-around gap-3 p-4">
+        {Array.from({ length: 11 }).map((_, rIdx) => {
           const headline = headlines[rIdx % headlines.length];
+          const style = rowStyles[rIdx % rowStyles.length];
           return (
             <div 
               key={rIdx} 
-              className="whitespace-nowrap flex items-center gap-1 text-emerald-400 font-bold"
+              className={`whitespace-nowrap flex items-center gap-2 max-w-fit px-3.5 py-1.5 rounded-xl shadow-lg shadow-black/30 tracking-wider whitespace-nowrap ${style.text}`}
               style={{
-                transform: `translateX(${(rIdx % 2 === 0 ? 1 : -1) * (rIdx * 10)}px)`,
-                opacity: 1 - (Math.abs(rIdx - 6) / 8)
+                transform: `translateX(${(rIdx % 2 === 0 ? 1 : -1) * (rIdx * 12)}px)`,
+                opacity: 1 - (Math.abs(rIdx - 5.5) / 7.5)
               }}
             >
-              <TypingText text={headline} delay={rIdx * 400} />
+              <span className="shrink-0 text-[8px] md:text-[10px] select-none uppercase tracking-widest opacity-60">
+                [ROW {rIdx + 1} // SYS_ACTIVE]
+              </span>
+              <TypingText text={headline} delay={rIdx * 350} />
             </div>
           );
         })}
@@ -1388,19 +1403,19 @@ function TypingText({ text, delay }: { text: string; delay: number }) {
           if (charIndex < text.length) {
             setDisplayText(text.slice(0, charIndex + 1));
             setCharIndex(prev => prev + 1);
-            timer = setTimeout(run, 50 + Math.random() * 30);
+            timer = setTimeout(run, 45 + Math.random() * 25);
           } else {
             setPhase("pause");
-            timer = setTimeout(run, 2500);
+            timer = setTimeout(run, 3000);
           }
         } else if (phase === "pause") {
           setPhase("deleting");
-          timer = setTimeout(run, 500);
+          timer = setTimeout(run, 600);
         } else if (phase === "deleting") {
           if (charIndex > 0) {
             setDisplayText(text.slice(0, charIndex - 1));
             setCharIndex(prev => prev - 1);
-            timer = setTimeout(run, 15);
+            timer = setTimeout(run, 12);
           } else {
             setPhase("typing");
             timer = setTimeout(run, 800);
@@ -1420,7 +1435,7 @@ function TypingText({ text, delay }: { text: string; delay: number }) {
   return (
     <span>
       {displayText}
-      <span className="inline-block w-1 h-3.5 bg-emerald-400/90 ml-0.5 animate-pulse shrink-0">|</span>
+      <span className="inline-block w-1.5 h-3.5 bg-current ml-1 animate-pulse shrink-0">|</span>
     </span>
   );
 }

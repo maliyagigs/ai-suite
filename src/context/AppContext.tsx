@@ -240,7 +240,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return { success: false, message: data.message || "Failed signing in." };
     } catch (err) {
-      return { success: false, message: "Server connection failed." };
+      console.error("Login fetch error:", err);
+      return { success: false, message: "Server connection failed: " + (err instanceof Error ? err.message : String(err)) };
     }
   };
 
@@ -272,7 +273,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return { success: false, message: data.message || "Failed registration." };
     } catch (err) {
-      return { success: false, message: "Server connection failed." };
+      console.error("Register fetch error:", err);
+      return { success: false, message: "Server connection failed: " + (err instanceof Error ? err.message : String(err)) };
     }
   };
 
@@ -299,7 +301,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
       }
       return { success: false, message: data.message || "Failed Google sign in." };
     } catch (err) {
-      return { success: false, message: "Server connection failed." };
+      console.error("Google login fetch error:", err);
+      return { success: false, message: "Server connection failed: " + (err instanceof Error ? err.message : String(err)) };
     }
   };
 
