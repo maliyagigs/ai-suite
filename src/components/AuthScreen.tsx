@@ -406,6 +406,67 @@ export function AuthScreen() {
   const [btnWidth, setBtnWidth] = useState(320);
   const containerRef = React.useRef<HTMLDivElement>(null);
 
+  const vantaRef = useRef<HTMLDivElement>(null);
+  const [vantaEffect, setVantaEffect] = useState<any>(null);
+
+  useEffect(() => {
+    let activeEffect: any = null;
+
+    const loadScripts = async () => {
+      try {
+        if (!(window as any).THREE) {
+          const threeScript = document.createElement("script");
+          threeScript.id = "vanta-three-script";
+          threeScript.src = "https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js";
+          threeScript.async = true;
+          await new Promise((resolve, reject) => {
+            threeScript.onload = resolve;
+            threeScript.onerror = reject;
+            document.head.appendChild(threeScript);
+          });
+        }
+
+        if (!(window as any).VANTA || !(window as any).VANTA.HALO) {
+          const vantaScript = document.createElement("script");
+          vantaScript.id = "vanta-halo-script";
+          vantaScript.src = "https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.halo.min.js";
+          vantaScript.async = true;
+          await new Promise((resolve, reject) => {
+            vantaScript.onload = resolve;
+            vantaScript.onerror = reject;
+            document.head.appendChild(vantaScript);
+          });
+        }
+
+        if (vantaRef.current && (window as any).VANTA && (window as any).VANTA.HALO) {
+          activeEffect = (window as any).VANTA.HALO({
+            el: vantaRef.current,
+            mouseControls: true,
+            touchControls: true,
+            gyroControls: false,
+            minHeight: 200.00,
+            minWidth: 200.00,
+            amplitudeFactor: 1.60,
+            xOffset: -0.21,
+            size: 0.70,
+            backgroundColor: 0x09090b,
+          });
+          setVantaEffect(activeEffect);
+        }
+      } catch (err) {
+        console.error("Failed to load Vanta HALO context:", err);
+      }
+    };
+
+    loadScripts();
+
+    return () => {
+      if (activeEffect) {
+        activeEffect.destroy();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     if (!containerRef.current) return;
     const observer = new ResizeObserver((entries) => {
@@ -755,7 +816,7 @@ export function AuthScreen() {
       </main>
 
       {/* Website Creations Showroom Section */}
-      <section className="w-full relative z-10 bg-[#09090b] py-24 overflow-hidden border-t border-slate-900 border-b border-slate-950">
+      <section ref={vantaRef} className="w-full relative z-10 bg-[#09090b] py-24 overflow-hidden border-t border-slate-900 border-b border-slate-950">
         {/* Ambient background glows */}
         <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] rounded-full bg-indigo-600/5 blur-[160px] pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] rounded-full bg-emerald-600/5 blur-[140px] pointer-events-none" />
