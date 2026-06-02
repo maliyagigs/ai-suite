@@ -290,7 +290,7 @@ export function AdminDashboard() {
                 Add New Showcase Creation
               </h3>
               
-              <form onSubmit={handleCreateProject} className="space-y-4">
+              <div className="space-y-4">
                 <div className="space-y-1">
                   <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-400">
                     Live Demo Link URL (https://)
@@ -313,13 +313,14 @@ export function AdminDashboard() {
                   )}
                   <div className="flex-1" />
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={(e) => handleCreateProject(e as any)}
                     className="px-6 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 shadow-lg shadow-indigo-500/10 active:scale-95 transition cursor-pointer"
                   >
                     Publish Website Creation
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
 
             {/* Current Creations Registry Table */}
@@ -371,9 +372,7 @@ export function AdminDashboard() {
                             <td className="py-4 pl-4 text-right">
                               <button
                                 onClick={async () => {
-                                  if (confirm(`Are you sure you want to delete ${p.title}?`)) {
-                                    await deleteProject(p.id);
-                                  }
+                                  await deleteProject(p.id);
                                 }}
                                 className="h-8 w-8 inline-flex items-center justify-center rounded-lg border border-slate-150 dark:border-slate-800 text-slate-400 hover:text-rose-600 dark:hover:text-rose-450 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition cursor-pointer"
                                 title="Delete Web Showcase"
@@ -408,7 +407,7 @@ export function AdminDashboard() {
                 Landing Page Stats Settings
               </h3>
               
-              <form onSubmit={handleUpdateStats} className="space-y-4">
+              <div className="space-y-4">
                 <div className="space-y-2">
                   <label className="block text-[10px] uppercase tracking-widest font-extrabold text-slate-450 dark:text-slate-400">
                     Paid To Sellers count (Animated Target value, e.g. 2 for $2M+)
@@ -447,13 +446,14 @@ export function AdminDashboard() {
                   )}
                   <div className="flex-1" />
                   <button
-                    type="submit"
+                    type="button"
+                    onClick={(e) => handleUpdateStats(e as any)}
                     className="px-6 py-2.5 text-xs font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shrink-0 shadow-lg shadow-indigo-500/10 active:scale-95 transition cursor-pointer font-sans"
                   >
                     Save Changes
                   </button>
                 </div>
-              </form>
+              </div>
             </div>
           </div>
         )}
@@ -1089,7 +1089,7 @@ export function AdminDashboard() {
                   : `Send a direct alert to ${selectedUserForNotif?.name}.`}
               </p>
 
-              <form onSubmit={handleSendNotification} className="space-y-4">
+              <div className="space-y-4">
                 <div>
                   <label className="block text-[10px] uppercase tracking-widest font-bold text-slate-500 mb-1.5">
                     Notification Subject
@@ -1118,7 +1118,8 @@ export function AdminDashboard() {
                 </div>
 
                 <button
-                  type="submit"
+                  type="button"
+                  onClick={(e) => handleSendNotification(e as any)}
                   disabled={notifSentFeedback}
                   className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition-colors mt-2"
                 >
@@ -1131,7 +1132,7 @@ export function AdminDashboard() {
                     "Transmitting Notification"
                   )}
                 </button>
-              </form>
+              </div>
             </motion.div>
           </div>
         )}
