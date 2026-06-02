@@ -780,8 +780,8 @@ export function AuthScreen() {
             </motion.div>
           </div>
 
-          {/* Grid Layout: 2 Columns on Desktop, 1 Column on Mobile */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16">
+          {/* Grid Layout: 3 Columns on Desktop (forming 2 rows of 3 previews), 2 columns on Mobile (forming 3 rows of 2 previews) */}
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
             {projects && projects.length > 0 ? (
               projects.map((p, index) => (
                 <motion.div
@@ -789,25 +789,25 @@ export function AuthScreen() {
                   initial={{ opacity: 0, y: 40 }}
                   whileInView={{ opacity: 1, y: 0 }}
                   viewport={{ once: true, amount: 0.05 }}
-                  transition={{ duration: 0.7, delay: index * 0.15, type: "spring", stiffness: 50 }}
-                  className="flex flex-col h-full bg-slate-950/45 p-5 md:p-6 rounded-[2rem] border border-slate-900 shadow-xl relative group transition"
+                  transition={{ duration: 0.7, delay: index * 0.1, type: "spring", stiffness: 60 }}
+                  className="flex flex-col bg-slate-950/35 p-3 md:p-4 rounded-[1.5rem] border border-slate-900 shadow-lg relative group transition"
                 >
                   {/* CSS Designed Sleek Mini Monitor */}
                   <div className="w-full relative flex flex-col">
                     {/* Bezel frame */}
-                    <div className="w-full bg-slate-800 rounded-t-2xl border-x-4 border-t-4 border-slate-700/90 shadow-2xl overflow-hidden aspect-[16/10] flex flex-col relative select-none">
+                    <div className="w-full bg-slate-800 rounded-t-xl border-x-2 border-t-2 border-slate-700/90 shadow-xl overflow-hidden aspect-[16/10] flex flex-col relative select-none">
                       {/* Interactive Browser Top Bar */}
-                      <div className="h-7 w-full bg-slate-800 border-b border-slate-750 px-3 flex items-center gap-2 select-none shrink-0">
+                      <div className="h-5 w-full bg-slate-800 border-b border-slate-755 px-2 flex items-center gap-1.5 select-none shrink-0">
                         {/* Red, Yellow, Green mock dots */}
-                        <div className="flex gap-1.5 shrink-0">
-                          <span className="w-2.5 h-2.5 rounded-full bg-rose-500/90 border border-rose-600" />
-                          <span className="w-2.5 h-2.5 rounded-full bg-amber-500/90 border border-amber-600" />
-                          <span className="w-2.5 h-2.5 rounded-full bg-emerald-500/90 border border-emerald-600" />
+                        <div className="flex gap-1 shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-rose-500/90" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500/90" />
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/90" />
                         </div>
                         {/* URL Search bar */}
-                        <div className="flex-1 max-w-md mx-auto h-4.5 bg-slate-900/60 rounded px-2.5 flex items-center gap-1.5 min-w-0">
-                          <Globe className="h-3 w-3 text-indigo-400 shrink-0" />
-                          <span className="text-[10px] text-slate-450 font-mono truncate select-all">
+                        <div className="flex-1 max-w-[140px] mx-auto h-3.5 bg-slate-900/60 rounded px-1.5 flex items-center gap-1 min-w-0">
+                          <Globe className="h-2.5 w-2.5 text-indigo-400 shrink-0" />
+                          <span className="text-[8px] text-slate-450 font-mono truncate select-all">
                             {p.url}
                           </span>
                         </div>
@@ -819,7 +819,7 @@ export function AuthScreen() {
                           className="text-slate-450 hover:text-indigo-400 active:scale-95 transition ml-auto flex items-center"
                           title="Open Demo in Full View"
                         >
-                          <ArrowRight className="h-3.5 w-3.5 -rotate-45" />
+                          <ArrowRight className="h-2.5 w-2.5 -rotate-45" />
                         </a>
                       </div>
 
@@ -828,11 +828,16 @@ export function AuthScreen() {
                         <iframe
                           src={p.url}
                           title={p.title}
-                          className="w-full h-full border-0 pointer-events-auto select-none"
+                          className="absolute top-0 left-0 border-0 pointer-events-auto select-none"
                           sandbox="allow-scripts allow-same-origin allow-popups"
                           loading="lazy"
                           referrerPolicy="no-referrer"
-                          style={{ minHeight: '100%', overflowY: 'auto' }}
+                          style={{
+                            width: "300%",
+                            height: "300%",
+                            transform: "scale(0.333333)",
+                            transformOrigin: "top left"
+                          }}
                         />
 
                         {/* Interactive floating glass click link as iframe cover on hover */}
@@ -841,11 +846,11 @@ export function AuthScreen() {
                             href={p.url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="pointer-events-auto px-4 py-2 bg-slate-900/90 hover:bg-indigo-600 text-white rounded-xl border border-white/10 text-xs font-semibold flex items-center gap-1.5 shadow-xl transition-all duration-200 transform scale-95 group-hover:scale-100"
+                            className="pointer-events-auto px-3 py-1.5 bg-slate-900/90 hover:bg-indigo-600 text-white rounded-lg border border-white/10 text-[10px] font-semibold flex items-center gap-1 shadow-md transition-all duration-250 transform scale-95 group-hover:scale-100"
                           >
-                            <Globe className="w-3.5 h-3.5 shrink-0" />
-                            Explore Live Instance
-                            <ArrowRight className="w-3 h-3 text-white/80 shrink-0" />
+                            <Globe className="w-3 h-3 shrink-0" />
+                            Explore Demo
+                            <ArrowRight className="w-2.5 h-2.5 text-white/80 shrink-0" />
                           </a>
                         </div>
                       </div>
@@ -854,46 +859,19 @@ export function AuthScreen() {
                     {/* Desktop screen base stand decorations */}
                     <div className="w-full select-none pointer-events-none">
                       {/* Chin Bar */}
-                      <div className="w-full bg-slate-700/90 h-3.5 rounded-b-xl border-t border-slate-600 flex items-center justify-center">
-                        <span className="w-1.5 h-1.5 rounded-full bg-indigo-400/80 shadow-md shadow-indigo-500 animate-pulse" />
+                      <div className="w-full bg-slate-700/90 h-2.5 rounded-b-lg border-t border-slate-600 flex items-center justify-center">
+                        <span className="w-1 h-1 rounded-full bg-indigo-400/80 shadow-md shadow-indigo-500 animate-pulse" />
                       </div>
                       {/* Neck support column */}
-                      <div className="mx-auto w-14 bg-gradient-to-b from-slate-600 to-slate-800 h-7 border-x border-b border-slate-900 shadow-inner" />
+                      <div className="mx-auto w-10 bg-gradient-to-b from-slate-600 to-slate-800 h-4 border-x border-b border-slate-900 shadow-inner" />
                       {/* Desk Plate Base */}
-                      <div className="mx-auto w-28 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 h-2.5 rounded shadow-xl" />
-                    </div>
-                  </div>
-
-                  {/* Project metadata panel */}
-                  <div className="mt-6 flex-1 flex flex-col justify-between">
-                    <div>
-                      <h4 className="text-lg font-bold font-display text-white group-hover:text-indigo-400 transition-colors">
-                        {p.title}
-                      </h4>
-                      <p className="text-slate-400 text-xs md:text-sm mt-2 leading-relaxed">
-                        {p.description}
-                      </p>
-                    </div>
-
-                    <div className="pt-5 border-t border-slate-900 flex items-center justify-between gap-4 mt-6">
-                      <span className="text-[10px] uppercase tracking-wider text-slate-500 font-mono font-bold">
-                        Node Deployment v1.4
-                      </span>
-                      <a
-                        href={p.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 font-bold text-xs text-indigo-400 hover:text-indigo-300 transition"
-                      >
-                        Launch Live Application
-                        <ArrowRight className="w-3.5 h-3.5 transform group-hover:translate-x-1 transition-transform" />
-                      </a>
+                      <div className="mx-auto w-20 bg-gradient-to-r from-slate-800 via-slate-700 to-slate-900 h-2 rounded shadow-lg" />
                     </div>
                   </div>
                 </motion.div>
               ))
             ) : (
-              <div className="col-span-1 lg:col-span-2 py-24 border border-dashed border-slate-800 rounded-3xl text-center text-slate-500 max-w-sm mx-auto">
+              <div className="col-span-2 lg:col-span-3 py-24 border border-dashed border-slate-800 rounded-3xl text-center text-slate-500 max-w-sm mx-auto">
                 No creations found in search registry. Please login as Admin to seed some creations first.
               </div>
             )}
