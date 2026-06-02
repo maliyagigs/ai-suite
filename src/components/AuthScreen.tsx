@@ -392,6 +392,82 @@ function AnimatedCounter({ from, to, prefix = "", suffix = "", duration = 2 }: {
   return <span ref={ref}>{prefix}{count.toLocaleString()}{suffix}</span>;
 }
 
+function AnimatedHeroHeading() {
+  const words = [
+    { text: "The", getColor: () => "" },
+    { text: "best", getColor: () => "" },
+    { text: "place", getColor: () => "" },
+    { text: "to", getColor: () => "" },
+    { text: "buy", getColor: () => "text-indigo-400 italic font-medium" },
+    { text: "and", getColor: () => "" },
+    { text: "sell", getColor: () => "text-emerald-400 italic font-medium" },
+    { text: "your", getColor: () => "" },
+    { text: "software", getColor: () => "" },
+    { text: "services", getColor: () => "" }
+  ];
+
+  const containerRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    let anim1: any = null;
+    let anim2: any = null;
+    let isMounted = true;
+
+    const runTimeline = async () => {
+      if (!isMounted || !containerRef.current) return;
+
+      const letters = containerRef.current.querySelectorAll(".letter-anim");
+      letters.forEach((el) => {
+        (el as HTMLElement).style.opacity = "0";
+      });
+      containerRef.current.style.opacity = "1";
+
+      try {
+        // Animation 1: Fade-in staggered (much faster now)
+        anim1 = anime(letters, {
+          opacity: [0, 1],
+          easing: "easeInOutQuad",
+          duration: 700,
+          delay: stagger(45),
+        });
+
+        await anim1;
+      } catch (err) {
+        console.error("Animation error", err);
+      }
+    };
+
+    const timer = setTimeout(runTimeline, 300);
+
+    return () => {
+      isMounted = false;
+      clearTimeout(timer);
+      if (anim1 && typeof anim1.pause === "function") anim1.pause();
+    };
+  }, []);
+
+  return (
+    <h1 
+      ref={containerRef}
+      className="text-[3rem] sm:text-[4rem] lg:text-[4.5rem] leading-[1.05] font-display font-black tracking-[-0.03em] text-white mb-6 select-none ml3 min-h-[14rem] sm:min-h-[10rem] lg:min-h-[11rem]"
+    >
+      {words.map((word, wordIdx) => (
+        <span key={wordIdx} className="inline-block whitespace-nowrap mr-[0.25em] last:mr-0">
+          {word.text.split("").map((letter, letterIdx) => (
+            <span 
+              key={letterIdx} 
+              className={`letter-anim inline-block ${word.getColor() || ""}`}
+              style={{ opacity: 0 }}
+            >
+              {letter}
+            </span>
+          ))}
+        </span>
+      ))}
+    </h1>
+  );
+}
+
 export function AuthScreen() {
   const { login, register, googleLogin, theme, projects } = useApp();
   const [activeTab, setActiveTab] = useState<"login" | "register">("login");
@@ -596,7 +672,7 @@ export function AuthScreen() {
       </nav>
 
       {/* Hero Section */}
-      <main className="flex-1 w-full max-w-7xl mx-auto px-6 pt-12 md:pt-20 pb-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center relative z-10">
+      <main className="flex-1 w-full max-w-7xl mx-auto px-6 pt-12 md:pt-20 pb-20 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-start relative z-10">
         
         {/* Left: Copy & Value Prop */}
         <motion.div 
@@ -606,11 +682,7 @@ export function AuthScreen() {
           className="flex flex-col items-start max-w-2xl"
         >
           <motion.div variants={itemVariants}>
-            <h1 className="text-[3rem] sm:text-[4rem] lg:text-[4.5rem] leading-[1.05] font-display font-bold tracking-[-0.03em] text-white mb-6">
-              The best place to{" "}
-              <span className="text-indigo-400 italic font-medium">buy</span> and{" "}
-               <span className="text-emerald-400 italic font-medium">sell</span> your software services
-            </h1>
+            <AnimatedHeroHeading />
           </motion.div>
 
           <motion.p variants={itemVariants} className="text-lg md:text-xl text-slate-300 max-w-lg mb-10 font-medium leading-relaxed tracking-tight">
