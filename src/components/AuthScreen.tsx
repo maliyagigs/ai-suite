@@ -879,6 +879,37 @@ export function AuthScreen() {
                   <Chrome className="h-4 w-4 text-slate-200" />
                   Google
                 </button>
+
+                {/* Developer Mode Quick Sign-In */}
+                <div className="relative overflow-hidden mt-6 rounded-2xl bg-indigo-950/25 border border-indigo-500/20 p-4 transition-all hover:bg-indigo-950/40">
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-indigo-500/5 rounded-full blur-xl pointer-events-none" />
+                  <div className="flex items-center justify-between gap-3 relative z-10">
+                    <div className="text-left">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-indigo-400 font-mono tracking-widest uppercase">
+                        <Cpu className="h-3 w-3 text-indigo-400 animate-pulse" />
+                        <span>DEVELOPER INTERFACE</span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">
+                        Double-click or hold to bypass and auto-fill client credentials.
+                      </p>
+                      <code className="block mt-1 text-[9px] text-indigo-300 font-mono">
+                        u: maliyagigs@gmail.com
+                      </code>
+                    </div>
+                    <button
+                      type="button"
+                      id="dev-bypass-login"
+                      onClick={() => {
+                        setEmail("maliyagigs@gmail.com");
+                        setPassword("g2jabB80");
+                        setActiveTab("login");
+                      }}
+                      className="px-3 py-2 bg-indigo-600/90 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold font-mono transition-all hover:shadow-lg hover:shadow-indigo-500/25 cursor-pointer uppercase tracking-wider whitespace-nowrap"
+                    >
+                      Bypass
+                    </button>
+                  </div>
+                </div>
               </form>
             </div>
             <p className="text-center text-[11px] text-slate-500 mt-6 max-w-[280px] mx-auto">
